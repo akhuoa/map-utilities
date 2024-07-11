@@ -34,6 +34,7 @@ declare module 'vue' {
     ExternalResourceCard: typeof import('./components/Tooltip/ExternalResourceCard.vue')['default']
     HelpModeDialog: typeof import('./components/HelpModeDialog/HelpModeDialog.vue')['default']
     ProvenancePopup: typeof import('./components/Tooltip/ProvenancePopup.vue')['default']
+    ImageGalleryPopup: typeof import('./components/Tooltip/ImageGalleryPopup.vue')['default']
     Tooltip: typeof import('./components/Tooltip/Tooltip.vue')['default']
     TreeControls: typeof import('./components/TreeControls/TreeControls.vue')['default']
   }
