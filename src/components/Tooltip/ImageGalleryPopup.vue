@@ -52,8 +52,7 @@ import {
   ElTag as Tag,
 } from 'element-plus'
 
-import EventBus from './EventBus'
-import flatmapImageMixin from '../mixins/flatmapImageMixin';
+import flatmapImageMixin from '../../mixins/flatmapImageMixin';
 
 const titleCase = (str) => {
   return str.replace(/\w\S*/g, (t) => {
