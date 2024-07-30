@@ -124,19 +124,19 @@ function onActionClick(value) {
 /**
  * Tooltip
  */
-const tooltipDisplay = ref(false);
-const tooltipEntry = ref({});
+const tooltipType = ref("");
+const provenanceEntry = ref({});
 const featuresAlert = ref(undefined);
-const annotationDisplay = ref(false);
 const annotationEntry = ref({});
+const imageEntry = ref([]);
 
 provide(/* key */ "getFeaturesAlert", /* value */ () => featuresAlert.value);
 provide(/* key */ "$annotator", /* value */ undefined);
 provide(/* key */ "userApiKey", /* value */ undefined);
 
-function addTooltipEntry() {
-  tooltipDisplay.value = true;
-  tooltipEntry.value = {
+function addProvenanceEntry() {
+  tooltipType.value = "provenance";
+  provenanceEntry.value = {
     destinations: [null],
     origins: [null],
     components: ["pudendal nerve"],
@@ -160,13 +160,12 @@ function addTooltipEntry() {
     provenanceTaxonomyLabel: ["Homo sapiens"],
   };
 }
-function removeTooltipEntry() {
-  tooltipDisplay.value = false;
-  tooltipEntry.value = {};
+function removeProvenanceEntry() {
+  tooltipType.value = "";
+  provenanceEntry.value = {};
 }
 function addAnnotationEntry() {
-  tooltipDisplay.value = true;
-  annotationDisplay.value = true;
+  tooltipType.value = "annotation";
   annotationEntry.value = {
     id: "digestive_8-1",
     featureId: 4958,
@@ -179,12 +178,96 @@ function addAnnotationEntry() {
   };
 }
 function removeAnnotationEntry() {
-  tooltipDisplay.value = false;
-  annotationDisplay.value = false;
+  tooltipType.value = "";
   annotationEntry.value = {};
 }
 function commitAnnotationEvent(value) {
   console.log("🚀 ~ commitAnnotationEvent ~ value:", value);
+}
+function addImageEntry() {
+  tooltipType.value = "image";
+  imageEntry.value = [
+    {
+      anatomy: [
+        {
+          curie: "",
+          matchingStatus: "Exact Match",
+          name: "stomach",
+        },
+      ],
+      datasetId: "22",
+      datasetVersion: "2",
+      link: "https://sparc.biolucida.net/image?c=Mzg3Ny1jb2wtMTUw",
+      resource: {
+        share_link: "https://sparc.biolucida.net/image?c=Mzg3Ny1jb2wtMTUw",
+      },
+      s3uri: "s3://prd-sparc-discover50-use1/22/",
+      species: [
+        {
+          species: {
+            curie: "NCBITaxon:9825",
+            matchingStatus: "approved",
+            name: "Pig",
+            originalName: "Domestic Pig",
+            parents: [
+              {
+                curie: "ilx:0739765",
+                name: "Pig",
+              },
+            ],
+          },
+          strain: {
+            name: "Large White / Landrace crossbred pig",
+          },
+        },
+      ],
+      thumbnail: "https://sparc.biolucida.net/api/v1/thumbnail/3877",
+      title: "SPARC Image 1",
+      type: "image",
+    },
+    {
+      anatomy: [
+        {
+          curie: "",
+          matchingStatus: "Exact Match",
+          name: "stomach",
+        },
+      ],
+      datasetId: "22",
+      datasetVersion: "2",
+      link: "https://sparc.biolucida.net/image?c=Mzg3Ny1jb2wtMTUw",
+      resource: {
+        share_link: "https://sparc.biolucida.net/image?c=Mzg3Ny1jb2wtMTUw",
+      },
+      s3uri: "s3://prd-sparc-discover50-use1/22/",
+      species: [
+        {
+          species: {
+            curie: "NCBITaxon:9825",
+            matchingStatus: "approved",
+            name: "Pig",
+            originalName: "Domestic Pig",
+            parents: [
+              {
+                curie: "ilx:0739765",
+                name: "Pig",
+              },
+            ],
+          },
+          strain: {
+            name: "Large White / Landrace crossbred pig",
+          },
+        },
+      ],
+      thumbnail: "https://sparc.biolucida.net/api/v1/thumbnail/3877",
+      title: "SPARC Image 2",
+      type: "image",
+    },
+  ];
+}
+function removeImageEntry() {
+  tooltipType.value = "";
+  imageEntry.value = [];
 }
 /**
  * TreeControls
@@ -229,7 +312,7 @@ function setColourField(treeData, nodeData, activeColour) {
 function setColour(nodeData, value) {
   if (nodeData && nodeData.isPrimitives) {
     const activeColour = value ? value : nodeData.defaultColour;
-    setColourField(treeDataEntry.value, nodeData, activeColour)
+    setColourField(treeDataEntry.value, nodeData, activeColour);
   }
 }
 function checkAll(value) {
@@ -380,21 +463,29 @@ function changeHover(value) {
       </el-col>
       <el-col>
         <el-button
-          v-show="!annotationDisplay"
-          @click="addTooltipEntry"
+          v-show="
+            tooltipType === '' ||
+            (tooltipType === 'provenance' &&
+              Object.keys(provenanceEntry).length === 0)
+          "
+          @click="addProvenanceEntry"
           size="small"
         >
-          Add Tooltip Entry
+          Add Provenance Entry
         </el-button>
         <el-button
-          v-show="Object.keys(tooltipEntry).length > 0"
-          @click="removeTooltipEntry"
+          v-show="Object.keys(provenanceEntry).length > 0"
+          @click="removeProvenanceEntry"
           size="small"
         >
-          Remove Tooltip Entry
+          Remove Provenance Entry
         </el-button>
         <el-button
-          v-show="!Object.keys(tooltipEntry).length > 0"
+          v-show="
+            tooltipType === '' ||
+            (tooltipType === 'annotation' &&
+              Object.keys(annotationEntry).length === 0)
+          "
           @click="addAnnotationEntry"
           size="small"
         >
@@ -407,6 +498,23 @@ function changeHover(value) {
         >
           Remove Annotation Entry
         </el-button>
+        <el-button
+          v-show="
+            tooltipType === '' ||
+            (tooltipType === 'image' && Object.keys(imageEntry).length === 0)
+          "
+          @click="addImageEntry"
+          size="small"
+        >
+          Add Image Entry
+        </el-button>
+        <el-button
+          v-show="Object.keys(imageEntry).length > 0"
+          @click="removeImageEntry"
+          size="small"
+        >
+          Remove Image Entry
+        </el-button>
       </el-col>
     </el-row>
     <el-row>
@@ -414,10 +522,18 @@ function changeHover(value) {
         <h3>TreeControls - {{ mapType }}</h3>
       </el-col>
       <el-col>
-        <el-button v-show="mapType==='scaffold'" @click="switchTreeEntry('flatmap')" size="small">
+        <el-button
+          v-show="mapType === 'scaffold'"
+          @click="switchTreeEntry('flatmap')"
+          size="small"
+        >
           Display Flatmap Tree
         </el-button>
-        <el-button v-show="mapType==='flatmap'" @click="switchTreeEntry('scaffold')" size="small">
+        <el-button
+          v-show="mapType === 'flatmap'"
+          @click="switchTreeEntry('scaffold')"
+          size="small"
+        >
           Display Scaffold Tree
         </el-button>
       </el-col>
@@ -459,11 +575,12 @@ function changeHover(value) {
       @finish-help-mode="onFinishHelpMode"
     />
     <Tooltip
-      v-show="tooltipDisplay"
+      v-show="tooltipType"
       class="tooltip"
-      :tooltipEntry="tooltipEntry"
-      :annotationDisplay="annotationDisplay"
+      :tooltipType="tooltipType"
+      :provenanceEntry="provenanceEntry"
       :annotationEntry="annotationEntry"
+      :imageEntry="imageEntry"
       @annotation="commitAnnotationEvent"
       @onActionClick="onActionClick"
     />
@@ -498,10 +615,12 @@ function changeHover(value) {
 .options-container {
   text-align: center;
 }
+
 .help-mode-dialog {
   position: absolute;
   top: 50%;
 }
+
 .tooltip {
   width: 400px;
   position: absolute;

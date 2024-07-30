@@ -1,62 +1,49 @@
 <template>
   <div class="tooltip-container" id="tooltip-container">
-    <template v-if="tooltipType === 'annotation' && annotationDisplay">
+    <template v-if="tooltipType === 'annotation'">
       <annotation-popup
         :annotationEntry="annotationEntry"
         @annotation="$emit('annotation', $event)"
       />
     </template>
     <template v-if="tooltipType === 'provenance'">
-      <provenance-popup
-        :tooltipEntry="tooltipEntry"
-        @view-image="viewImage"
-      />
+      <provenance-popup :provenanceEntry="provenanceEntry" />
     </template>
-    <template v-if="tooltipType === 'image-gallery'">
-      <image-gallery-popup
-        :galleryItems="galleryItems"
-        @viewImage="viewImage"
-      />
+    <template v-if="tooltipType === 'image'">
+      <image-gallery-popup :imageEntry="imageEntry" />
     </template>
   </div>
 </template>
 
 <script>
-import EventBus from '../EventBus.js';
+import EventBus from "../EventBus.js";
 
 export default {
   name: "Tooltip",
   props: {
-    tooltipEntry: {
-      type: Object,
-    },
     tooltipType: {
       type: String,
-      default: 'provenance',
+      default: "",
     },
-    annotationDisplay: {
-      type: Boolean,
-      default: false,
+    provenanceEntry: {
+      type: Object,
+      default: {},
     },
     annotationEntry: {
       type: Object,
+      default: {},
     },
-    galleryItems: {
+    imageEntry: {
       type: Array,
-      default: () => [],
+      default: [],
     },
   },
-  mounted: function() {
+  mounted: function () {
     // Emit events from child components
     EventBus.on("onActionClick", (data) => {
       this.$emit("onActionClick", data);
     });
   },
-  methods: {
-    viewImage: function (url) {
-      this.$emit('view-image', url)
-    }
-  }
 };
 </script>
 
