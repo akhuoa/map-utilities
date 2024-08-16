@@ -200,7 +200,7 @@ export default {
       }),
     },
   },
-  // inject: ["getFeaturesAlert"],
+  inject: ["getFeaturesAlert"],
   data: function () {
     return {
       controller: undefined,
@@ -219,8 +219,7 @@ export default {
   },
   computed: {
     featuresAlert() {
-      // return this.getFeaturesAlert();
-      return ""
+      return this.getFeaturesAlert();
     },
     resources: function () {
       let resources = [];
