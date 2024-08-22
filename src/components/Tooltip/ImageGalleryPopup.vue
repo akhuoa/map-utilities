@@ -14,7 +14,7 @@
         {{ species.name }} ({{ species.count }})
       </el-tag>
       <div class="gallery-container">
-        <Gallery :items="filteredImages" />
+        <Gallery :items="filteredImages" :imageStyle="imageStyle" />
       </div>
     </div>
   </div>
@@ -46,6 +46,14 @@ export default {
       filteredImages: [],
       showImageGallery: false,
     };
+  },
+  computed: {
+    imageStyle() {
+      return {
+        width: "180px",
+        height: "135px",
+      };
+    },
   },
   watch: {
     imageEntry: {
