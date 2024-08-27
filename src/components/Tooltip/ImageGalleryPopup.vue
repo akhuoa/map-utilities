@@ -6,15 +6,15 @@
         :key="index"
         type="info"
         class="tag"
-        :class="{ 'active-tag': species.taxon === activeSpecies.taxon }"
-        :closable="species.taxon === activeSpecies.taxon"
+        :class="{ 'active-tag': species.name === activeSpecies.name }"
+        :closable="species.name === activeSpecies.name"
         @close="removeSpeciesFilterTag"
         @click="filterBySpecies(species)"
       >
         {{ species.name }} ({{ species.count }})
       </el-tag>
       <div class="gallery-container">
-        <Gallery :items="filteredImages" :imageStyle="imageStyle" />
+        <Gallery :items="imageItems" :imageStyle="imageStyle" />
       </div>
     </div>
   </div>
@@ -28,7 +28,7 @@ import Gallery from "@abi-software/gallery";
 import "@abi-software/gallery/dist/style.css";
 
 export default {
-  name: "ImagePopup",
+  name: "ImageGalleryPopup",
   components: {
     Tag,
     Gallery,
@@ -41,9 +41,9 @@ export default {
   },
   data: function () {
     return {
-      activeSpecies: { taxon: "", name: "" },
+      activeSpecies: { name: "" },
       speciesFilterTags: [],
-      filteredImages: [],
+      imageItems: [],
       showImageGallery: false,
     };
   },
@@ -60,7 +60,7 @@ export default {
       handler: function (value) {
         if (value) {
           this.populateFilterTags();
-          this.filteredImages = this.imageEntry;
+          this.imageItems = this.imageEntry;
         }
       },
       deep: true,
@@ -68,39 +68,35 @@ export default {
   },
   methods: {
     removeSpeciesFilterTag: function () {
-      this.activeSpecies = { taxon: "", name: "" };
-      this.filteredImages = this.imageEntry;
+      this.activeSpecies = { name: "" };
+      this.imageItems = this.imageEntry;
     },
     filterBySpecies: function (tagInfo) {
       this.activeSpecies = tagInfo;
-      let imageList = [];
+      let filteredImageItems = [];
       this.imageEntry.forEach((image) => {
-        if (image.species && image.species.length > 0) {
+        if (image.species && image.species.length) {
           image.species.forEach((species) => {
-            if (species.species && species.species.curie === tagInfo.taxon) {
-              imageList.push(image);
+            if (species === tagInfo.name) {
+              filteredImageItems.push(image);
             }
           });
         }
       });
-      this.filteredImages = imageList;
+      this.imageItems = filteredImageItems;
     },
     populateFilterTags: function () {
       let imageObjects = {};
       this.imageEntry.forEach((image) => {
-        if (image.species && image.species.length > 0) {
+        if (image.species && image.species.length) {
           image.species.forEach((species) => {
-            if (species.species) {
-              const speciesInfo = species.species;
-              if (!(speciesInfo.curie in imageObjects)) {
-                imageObjects[speciesInfo.curie] = {
-                  taxon: speciesInfo.curie,
-                  name: speciesInfo.name,
-                  count: 0,
-                };
-              }
-              imageObjects[speciesInfo.curie].count++;
+            if (!(species in imageObjects)) {
+              imageObjects[species] = {
+                name: species,
+                count: 0,
+              };
             }
+            imageObjects[species].count++;
           });
         }
       });
@@ -109,7 +105,7 @@ export default {
   },
   mounted: function () {
     this.populateFilterTags();
-    this.filteredImages = this.imageEntry;
+    this.imageItems = this.imageEntry;
   },
 };
 </script>
