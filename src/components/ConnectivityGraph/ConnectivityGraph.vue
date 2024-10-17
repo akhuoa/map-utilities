@@ -60,6 +60,7 @@
 import { ConnectivityGraph } from './graph';
 
 const MIN_SCHEMA_VERSION = 1.3;
+const CACHE_LIFETIME = 24 * 60 * 60 * 1000; // One day
 const RESET_LABEL = 'Reset position';
 const ZOOM_LOCK_LABEL = 'Lock zoom (to scroll)';
 const ZOOM_UNLOCK_LABEL = 'Unlock zoom';
@@ -97,6 +98,7 @@ export default {
     };
   },
   mounted() {
+    this.refreshCache();
     this.loadCacheData();
     this.run().then((res) => {
       this.showGraph(this.entry);
@@ -123,10 +125,37 @@ export default {
         this.schemaVersion = schemaVersion;
       }
     },
+    removeAllCacheData: function () {
+      const keys = [
+        'connectivity-graph-expiry',
+        'connectivity-graph-source',
+        'connectivity-graph-labels',
+        'connectivity-graph-pathlist',
+        'connectivity-graph-schema-version',
+      ];
+      keys.forEach((key) => {
+        sessionStorage.removeItem(key);
+      });
+    },
+    refreshCache: function () {
+      const expiry = sessionStorage.getItem('connectivity-graph-expiry');
+      const now = new Date();
+
+      if (now.getTime() > expiry) {
+        this.removeAllCacheData();
+      }
+    },
+    updateCacheExpiry: function () {
+      const now = new Date();
+      const expiry = now.getTime() + CACHE_LIFETIME;
+
+      sessionStorage.setItem('connectivity-graph-expiry', expiry);
+    },
     run: async function () {
       if (!this.schemaVersion) {
         this.schemaVersion = await this.getSchemaVersion();
         sessionStorage.setItem('connectivity-graph-schema-version', this.schemaVersion);
+        this.updateCacheExpiry();
       }
       if (this.schemaVersion < MIN_SCHEMA_VERSION) {
         console.warn('No Server!');
@@ -136,22 +165,27 @@ export default {
       if (!this.selectedSource) {
         this.selectedSource = await this.setSourceList();
         sessionStorage.setItem('connectivity-graph-source', this.selectedSource);
+        this.updateCacheExpiry();
       }
-      await this.setPathList(this.selectedSource)
+      await this.setPathList(this.selectedSource);
       this.hideSpinner();
     },
     showGraph: async function (neuronPath) {
       const graphCanvas = this.$refs.graphCanvas;
+
       this.showSpinner();
+
       this.connectivityGraph = new ConnectivityGraph(this.labelCache, graphCanvas);
       await this.connectivityGraph.addConnectivity(this.knowledgeByPath.get(neuronPath));
+
       this.hideSpinner();
+
       this.connectivityGraph.showConnectivity(graphCanvas);
-      this.currentPath = neuronPath
     },
     query: async function (sql, params) {
       const url = `${this.mapServer}knowledge/query/`;
-      const query = { sql, params }
+      const query = { sql, params };
+
       try {
         const response = await fetch(url, {
           method: 'POST',
@@ -162,9 +196,11 @@ export default {
           },
           body: JSON.stringify(query)
         });
+
         if (!response.ok) {
           throw new Error(`Cannot access ${url}`);
         }
+
         return await response.json();
       } catch {
         return {
@@ -179,14 +215,17 @@ export default {
       // Order with most recent first...
       let firstSource = '';
       const sourceList = [];
+
       for (const source of sources) {
         if (source) {
           sourceList.push(source);
+
           if (firstSource === '') {
             firstSource = source;
           }
         }
       }
+
       return firstSource;
     },
     loadPathData: async function (source) {
@@ -202,9 +241,12 @@ export default {
       if (!this.pathList.length) {
         this.pathList = await this.loadPathData(source);
         sessionStorage.setItem('connectivity-graph-pathlist', JSON.stringify(this.pathList));
+        this.updateCacheExpiry();
       }
+
       this.knowledgeByPath.clear();
       this.labelledTerms = new Set();
+
       for (const [key, jsonKnowledge] of this.pathList) {
         const knowledge = JSON.parse(jsonKnowledge);
         if ('connectivity' in knowledge) {
@@ -216,6 +258,7 @@ export default {
       if (!this.labelCache.size) {
         await this.getCachedTermLabels();
       }
+
       return '';
     },
     getSchemaVersion: async function () {
@@ -232,9 +275,11 @@ export default {
             "Content-Type": "application/json"
           }
         });
+
         if (!response.ok) {
           console.error(`Cannot access ${url}`);
         }
+
         return await response.json();
       } catch {
         return null;
@@ -247,11 +292,14 @@ export default {
           where entity in (?${', ?'.repeat(this.labelledTerms.size-1)})`,
           [...this.labelledTerms.values()]
         );
+
         for (const termLabel of data.values) {
           this.labelCache.set(termLabel[0], termLabel[1]);
         }
+
         const labelCacheObj = Object.fromEntries(this.labelCache);
         sessionStorage.setItem('connectivity-graph-labels', JSON.stringify(labelCacheObj));
+        this.updateCacheExpiry();
       }
     },
     cacheNodeLabels: function (node) {
@@ -309,7 +357,7 @@ export default {
 .node-key {
   border: 1px solid $app-primary-color;
   padding: 4px;
-  background-color: rgba(240, 240, 240, 0.8);
+  background-color: rgba(#f7faff, 0.85);
 
   div div {
     width: 90px;
@@ -360,6 +408,20 @@ export default {
   &:hover {
     background: $lightPurple !important;
   }
+}
+
+:deep(.cy-graph-tooltip) {
+  padding: 4px 10px;
+  font-family: Asap;
+  font-size: 12px;
+  background: #f3ecf6 !important;
+  border: 1px solid $app-primary-color;
+  border-radius: var(--el-border-radius-base);
+  position: relative;
+  top: 0;
+  left: 0;
+  width: fit-content;
+  z-index: 1;
 }
 
 .visually-hidden {
