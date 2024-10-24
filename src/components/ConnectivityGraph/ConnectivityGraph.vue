@@ -385,25 +385,29 @@ export default {
 }
 
 .node-key {
-  border: 1px solid $app-primary-color;
-  padding: 4px;
+  padding: 0.5rem;
+  font-size: 12px;
+  border: 1px solid var(--el-border-color);
   background-color: rgba(#f7faff, 0.85);
 
   div div {
     width: 90px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
   }
 }
 
 .key-head {
   text-align: center;
   font-weight: bold;
-  border-bottom: 1px solid gray;
+  border-bottom: 1px solid var(--el-border-color);
   padding-bottom: 4px;
-  margin-bottom: 4px;
+  margin-bottom: 0.5rem;
 }
 
 .key-box {
-  float: right;
+  display: block;
   width: 12px;
   height: 12px;
 }
@@ -418,10 +422,13 @@ export default {
 }
 
 .control-button {
+  width: 24px;
+  height: 24px;
   margin: 0 !important;
-  padding: 0.25rem !important;
-  font-size: 14px !important;
+  padding: 0 !important;
+  font-size: 16px !important;
   border-color: $app-primary-color !important;
+  border-radius: 50%;
   background: $app-primary-color !important;
   transition: all 0.25s ease;
 
@@ -433,10 +440,6 @@ export default {
   &:focus,
   &:active {
     box-shadow: none !important;
-  }
-
-  &:hover {
-    background: $lightPurple !important;
   }
 }
 
