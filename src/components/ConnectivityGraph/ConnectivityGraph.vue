@@ -3,17 +3,8 @@
 
     <div ref="graphCanvas" class="graph-canvas"></div>
 
-    <div class="control-panel">
-      <div class="node-key">
-        <div class="key-head">Node type:</div>
-        <div>
-          <div><span>Node:</span><span class="key-box" style="background: #80F0F0"/></div>
-          <div><span>Axon:</span><span class="key-box" style="background: green"/></div>
-          <div><span>Dendrite:</span><span class="key-box" style="background: red"/></div>
-          <div><span>Both:</span><span class="key-box" style="background: gray"/></div>
-        </div>
-      </div>
-      <div class="tools">
+    <div class="control-panel control-panel-tools">
+      <div class="tools" :class="{'zoom-locked': zoomEnabled}">
         <el-tooltip
           :content="resetLabel"
           placement="bottom"
@@ -31,6 +22,7 @@
             <span class="visually-hidden">{{ resetLabel }}</span>
           </el-button>
         </el-tooltip>
+
         <el-tooltip
           :content="zoomLockLabel"
           placement="bottom"
@@ -53,6 +45,62 @@
             <span class="visually-hidden">{{ zoomLockLabel }}</span>
           </el-button>
         </el-tooltip>
+
+        <el-tooltip
+          :content="zoomInLabel"
+          placement="left"
+          effect="control-tooltip"
+        >
+          <el-button
+            class="control-button"
+            :class="theme"
+            size="small"
+            @click="zoomIn"
+          >
+            <el-icon color="white">
+              <el-icon-zoom-in />
+            </el-icon>
+            <span class="visually-hidden">{{ zoomInLabel }}</span>
+          </el-button>
+        </el-tooltip>
+
+        <el-tooltip
+          :content="zoomOutLabel"
+          placement="left"
+          effect="control-tooltip"
+        >
+          <el-button
+            class="control-button"
+            :class="theme"
+            size="small"
+            @click="zoomOut"
+          >
+            <el-icon color="white">
+              <el-icon-zoom-out />
+            </el-icon>
+            <span class="visually-hidden">{{ zoomOutLabel }}</span>
+          </el-button>
+        </el-tooltip>
+      </div>
+    </div>
+
+    <div class="control-panel control-panel-nodes">
+      <div class="node-key">
+        <!-- <div class="key-head">Node type:</div> -->
+        <div class="key-box-container">
+          <div class="key-box key-box-dendrite">
+            Dendrite
+          </div>
+          <div class="key-box key-box-node">
+            Node
+          </div>
+          <div class="key-box key-box-axon">
+            Axon
+          </div>
+          <div class="key-box key-box-both">
+            Both
+          </div>
+        </div>
       </div>
     </div>
 
@@ -71,6 +119,9 @@ const CACHE_LIFETIME = 24 * 60 * 60 * 1000; // One day
 const RESET_LABEL = 'Reset position';
 const ZOOM_LOCK_LABEL = 'Lock zoom (to scroll)';
 const ZOOM_UNLOCK_LABEL = 'Unlock zoom';
+const ZOOM_IN_LABEL = 'Zoom in';
+const ZOOM_OUT_LABEL = 'Zoom out';
+const ZOOM_INCREMENT = 0.25;
 const APP_PRIMARY_COLOR = '#8300bf';
 
 export default {
@@ -100,6 +151,8 @@ export default {
       labelCache: new Map(),
       resetLabel: RESET_LABEL,
       zoomLockLabel: ZOOM_LOCK_LABEL,
+      zoomInLabel: ZOOM_IN_LABEL,
+      zoomOutLabel: ZOOM_OUT_LABEL,
       iconColor: APP_PRIMARY_COLOR,
       zoomEnabled: false,
       errorMessage: '',
@@ -345,6 +398,12 @@ export default {
     reset: function () {
       this.connectivityGraph.reset();
     },
+    zoomIn: function () {
+      this.connectivityGraph.zoom(ZOOM_INCREMENT);
+    },
+    zoomOut: function () {
+      this.connectivityGraph.zoom(-ZOOM_INCREMENT);
+    },
     /**
      * Enable/disable user zoom for scrolling
      */
@@ -380,8 +439,15 @@ export default {
 
 .control-panel {
   position: absolute;
-  top: 1rem;
   right: 1rem;
+
+  &-tools {
+    top: 1rem;
+  }
+
+  &-nodes {
+    bottom: 1rem;
+  }
 }
 
 .node-key {
@@ -389,13 +455,6 @@ export default {
   font-size: 12px;
   border: 1px solid var(--el-border-color);
   background-color: rgba(#f7faff, 0.85);
-
-  div div {
-    width: 90px;
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-  }
 }
 
 .key-head {
@@ -406,19 +465,91 @@ export default {
   margin-bottom: 0.5rem;
 }
 
+.key-box-container {
+  display: flex;
+  flex-direction: row;
+  gap: 1rem;
+}
+
 .key-box {
-  display: block;
-  width: 12px;
-  height: 12px;
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  position: relative;
+
+  &::before {
+    content: "";
+    display: block;
+    width: 14px;
+    height: 14px;
+  }
+
+  &-node::before,
+  &-both::before {
+    border: 1px solid gray;
+    border-radius: var(--el-border-radius-small);
+  }
+
+  // &-node {
+  //   background: #80F0F0;
+  // }
+
+  // &-both {
+  //   background: gray;
+  // }
+
+  &-axon::before {
+    border: 1px solid gray;
+    border-radius: var(--el-border-radius-small);
+    transform: rotate(45deg);
+    // background: green;
+  }
+
+  &-dendrite::before {
+    border: 1px solid gray;
+    border-radius: 50%;
+    // background: red;
+  }
 }
 
 .tools {
-  margin-top: 0.5rem;
-  display: flex;
-  flex-direction: row;
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  grid-template-rows: repeat(3, 1fr);
   gap: 0.5rem;
-  align-items: flex-end;
-  justify-content: flex-end;
+
+  :deep(.el-button:nth-child(3)) {
+    grid-column: 2;
+    grid-row: 2;
+  }
+
+  :deep(.el-button:nth-child(4)) {
+    grid-column: 2;
+    grid-row: 3;
+  }
+
+  :deep(.el-button:nth-child(3)),
+  :deep(.el-button:nth-child(4)) {
+    opacity: 0;
+    visibility: hidden;
+    pointer-events: none;
+    transform: translateY(-100%);
+    transition: all 0.25s ease;
+  }
+
+  &.zoom-locked {
+    :deep(.el-button:nth-child(3)),
+    :deep(.el-button:nth-child(4)) {
+      opacity: 1;
+      visibility: visible;
+      pointer-events: initial;
+      transform: translateY(0%);
+    }
+
+    :deep(.el-button:nth-child(4)) {
+      transition-delay: 0.125s;
+    }
+  }
 }
 
 .control-button {

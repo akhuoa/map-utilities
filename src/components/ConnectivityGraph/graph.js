@@ -90,15 +90,33 @@ export class ConnectivityGraph extends EventTarget
     }
 
     reset()
-    //=================
+    //=====
     {
         if (this.cyg?.cy) {
             this.cyg.cy.reset()
         }
     }
 
+    zoom(val)
+    //=======
+    {
+        if (this.cyg?.cy) {
+            const currentZoom = this.cyg.cy.zoom()
+            const width = this.cyg.cy.width()
+            const height = this.cyg.cy.height()
+            const positionToRender = {
+                x: width/2,
+                y: height/2,
+            }
+            this.cyg.cy.zoom({
+                level: currentZoom + val,
+                renderedPosition: positionToRender,
+            })
+        }
+    }
+
     enableZoom(option)
-    //=================
+    //================
     {
         if (this.cyg?.cy) {
             this.cyg.cy.userZoomingEnabled(option)
@@ -162,43 +180,61 @@ const GRAPH_STYLE = [
     {
         'selector': 'node',
         'style': {
-            'label': 'data(label)',
-            'background-color': '#80F0F0',
+            'label': function(ele) { return trimLabel(ele.data('label')) },
+            // 'background-color': '#80F0F0',
+            'background-color': 'transparent',
+            'background-opacity': '0',
             'text-valign': 'center',
             'text-wrap': 'wrap',
+            'width': '80px',
+            'height': '80px',
             'text-max-width': '80px',
-            'font-size': '6px'
+            'font-size': '6px',
+            'shape': 'round-rectangle',
+            'border-width': 1,
+            'border-style': 'solid',
+            'border-color': 'gray',
         }
     },
     {
         'selector': 'node[axon]',
         'style': {
-            'background-color': 'green'
+            // 'background-color': 'green',
+            'shape': 'round-diamond',
         }
     },
     {
         'selector': 'node[dendrite]',
         'style': {
-            'background-color': 'red'
+            // 'background-color': 'red',
+            'shape': 'ellipse',
         }
     },
     {
         'selector': 'node[both-a-d]',
         'style': {
-            'background-color': 'gray'
+            // 'background-color': 'gray',
+            'shape': 'round-rectangle',
         }
     },
     {
         'selector': 'edge',
         'style': {
-            'width': 2,
-            'line-color': '#9dbaea',
-            'target-arrow-color': '#9dbaea',
+            'width': 1,
+            'line-color': 'dimgray',
+            'target-arrow-color': 'dimgray',
             'target-arrow-shape': 'triangle',
             'curve-style': 'bezier'
         }
     }
 ]
+
+function trimLabel(label) {
+    const labels = label.split('\n')
+    const half = labels.length/2
+    const trimLabels = labels.slice(half)
+    return trimLabels.join('\n')
+}
 
 function capitalizeLabels(input) {
     return input.split('\n').map(label => {
