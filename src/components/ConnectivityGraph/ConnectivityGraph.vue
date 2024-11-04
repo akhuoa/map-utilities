@@ -7,7 +7,7 @@
       <div class="tools" :class="{'zoom-locked': zoomEnabled}">
         <el-tooltip
           :content="resetLabel"
-          placement="bottom"
+          placement="top"
           effect="control-tooltip"
         >
           <el-button
@@ -25,7 +25,7 @@
 
         <el-tooltip
           :content="zoomLockLabel"
-          placement="bottom"
+          placement="top"
           effect="control-tooltip"
         >
           <el-button
@@ -89,17 +89,19 @@
         <!-- <div class="key-head">Node type:</div> -->
         <div class="key-box-container">
           <div class="key-box key-box-dendrite">
-            Dendrite
+            Origin
           </div>
           <div class="key-box key-box-node">
-            Node
+            Components
           </div>
           <div class="key-box key-box-axon">
-            Axon
+            Destination
           </div>
+          <!--
           <div class="key-box key-box-both">
             Both
           </div>
+          -->
         </div>
       </div>
     </div>
@@ -117,7 +119,7 @@ import { ConnectivityGraph } from './graph';
 const MIN_SCHEMA_VERSION = 1.3;
 const CACHE_LIFETIME = 24 * 60 * 60 * 1000; // One day
 const RESET_LABEL = 'Reset position';
-const ZOOM_LOCK_LABEL = 'Lock zoom (to scroll)';
+const ZOOM_LOCK_LABEL = 'Lock zoom';
 const ZOOM_UNLOCK_LABEL = 'Unlock zoom';
 const ZOOM_IN_LABEL = 'Zoom in';
 const ZOOM_OUT_LABEL = 'Zoom out';
@@ -476,6 +478,7 @@ export default {
   align-items: center;
   gap: 0.35rem;
   position: relative;
+  line-height: 1;
 
   &::before {
     content: "";
