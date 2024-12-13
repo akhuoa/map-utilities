@@ -1,18 +1,24 @@
 <template>
   <div class="resource-container" v-if="resources.length">
     <div class="attribute-title-container">
-      <div class="attribute-title">Publications</div>
+      <div class="attribute-title">References</div>
     </div>
     <div class="resource" v-for="resource in transformedResources" :key="resource.dataId">
       <el-button
         link
         class="button"
-        id="open-pubmed-button"
         :icon="getIconByType(resource.id)"
         @click="openUrl(resource.url)"
       >
-        {{ resource.title || resource.url }}
+        {{ resource.url }}
       </el-button>
+      <div class="citation-list">
+        <el-button link class="button" @click="getCitationText(resource, 'apa')">APA</el-button>
+        <el-button link class="button" @click="getCitationText(resource, 'chicago-note-bibliography')">Chicago</el-button>
+        <el-button link class="button" @click="getCitationText(resource, 'ieee')">IEEE</el-button>
+        <el-button link class="button" @click="getCitationText(resource, 'bibtex')">Bibtex</el-button>
+      </div>
+      <div class="citation-text">{{ resource.citationText }}</div>
     </div>
 
   </div>
@@ -29,6 +35,8 @@ import {
 
 import EventBus from "../EventBus.js";
 import { xmlToJSON } from "../utilities.js";
+
+const CROSSCITE_API_HOST = 'https://citation.crosscite.org';
 
 export default {
   name: "ExternalResourceCard",
@@ -59,15 +67,20 @@ export default {
       this.transformedResources = [];
 
       if (_resources.length) {
+        const rawURLs = _resources.filter(url => url.id === 'raw');
+        if (rawURLs.length) {
+          console.log('rawurls', rawURLs)
+        } else {
         for (const resource of _resources) {
           try {
             if (resource.id === 'pubmed') {
-              const { title, abstract } = await this.fetchArticle(resource.dataId);
+              const { title, doi } = await this.fetchSummary(resource.dataId);
 
               this.transformedResources.push({
                 ...resource,
                 title,
-                abstract,
+                doi,
+                citationText: '',
               });
             } else {
               let title = '';
@@ -91,7 +104,7 @@ export default {
           } catch (error) {
             console.error(`Error fetching data for id ${resource.dataId}:`, error);
           }
-        }
+        }}
       }
     },
     capitalise: function (string) {
@@ -120,13 +133,14 @@ export default {
         const eutilsFetchAPI = `https://eutils.ncbi.nlm.nih.gov/entrez/eutils/efetch.fcgi?db=pubmed&id=${id}`;
         const response = await this.fetchText(eutilsFetchAPI);
         const responseJSON = xmlToJSON(response);
+        console.log('response json', responseJSON)
         const article = responseJSON?.PubmedArticleSet?.PubmedArticle?.MedlineCitation?.Article;
         const title = article?.ArticleTitle || '';
         const abstract = article?.AbstractText || '';
-        return {title, abstract};
+        return {title, abstract, doi: ''};
       } catch (error) {
         console.warn('Fetch article error.', error)
-        return {title: '', abstract: ''};
+        return {title: '', abstract: '', doi: ''};
       }
     },
     fetchText: async function (url, maxRetries = 3) {
@@ -151,6 +165,48 @@ export default {
         }
       }
     },
+    fetchSummary: async function (id) {
+      try {
+        const eutilsSummaryAPI = `https://eutils.ncbi.nlm.nih.gov/entrez/eutils/esummary.fcgi?db=pubmed&id=${id}&format=json`;
+        const response = await fetch(eutilsSummaryAPI);
+        const data = await response.json();
+        const { result } = data;
+        let title = '';
+        let doi = '';
+
+        if (result && result[id]) {
+          title = result[id].title;
+          if (result[id].articleids?.length) {
+            doi = result[id].articleids.find(item => item.idtype === 'doi')?.value;
+          }
+        }
+        return { title, doi };
+      } catch (error) {
+        console.warn('Fetch error.', error)
+        return { title: '', doi: '' };
+      }
+    },
+    getCitationText: function(resource, type) {
+      console.log('%cResource', 'border:1px solid red', resource)
+      const doiValue = resource.doi;
+      if (doiValue) {
+        resource.citationText = '...';
+        const url = `${CROSSCITE_API_HOST}/format?doi=${doiValue}&style=${type}&lang=en-US`;
+        fetch(url).then((response) => {
+          if (response.status !== 200) {
+            throw Error
+          }
+          return response.text();
+        }).then((text) => {
+          console.log('%cCitation Text', 'background:green', text)
+          resource.citationText = text;
+        }).catch((err) => {
+          console.log('Error', err)
+        }).finally((res) => {
+          console.log('Loaded', res)
+        })
+      }
+    },
   },
 };
 </script>
@@ -160,8 +216,18 @@ export default {
   margin-top: 1em;
 }
 
-.attribute-title-container {
+.resource {
   margin-bottom: 0.5rem;
+}
+
+.resource-title {
+  font-weight: 600;
+}
+
+.attribute-title-container {
+  padding-bottom: 0.5rem;
+  margin-bottom: 0.5rem;
+  border-bottom: 1px solid $app-primary-color;
 }
 
 .attribute-title {
@@ -216,10 +282,28 @@ export default {
   &:hover {
     color: $app-primary-color;
   }
-
-  & + .button {
-    margin-top: 10px !important;
-    color: $app-primary-color;
-  }
 }
+
+.citation-list {
+  display: flex;
+  flex-direction: row;
+  gap: 0.25rem;
+}
+</style>
+
+<style lang="scss">
+  .el-popover.el-popper.is-clipboard-tooltip {
+    padding: 4px 10px;
+    font-family: Asap;
+    font-size: 12px;
+    color: inherit;
+    background: #f3ecf6 !important;
+    border: 1px solid $app-primary-color;
+
+    & .el-popper__arrow::before {
+      border: 1px solid;
+      border-color: $app-primary-color;
+      background: #f3ecf6;
+    }
+  }
 </style>
