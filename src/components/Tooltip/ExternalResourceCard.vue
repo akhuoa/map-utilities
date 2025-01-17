@@ -65,7 +65,7 @@
 </template>
 
 <script>
-import { Cite } from '@citation-js/core';
+import { Cite, plugins } from '@citation-js/core';
 import '@citation-js/plugin-doi';
 import '@citation-js/plugin-csl';
 import '@citation-js/plugin-bibtex';
@@ -435,6 +435,15 @@ export default {
       return await this.fetchData(esearchAPI);
     },
     getCitationTextByPMID: async function (id) {
+      // because 'chicago' and 'ieee' are not in citation.js default styles
+      if ((this.citationType !== 'bibtex') && (this.citationType !== 'apa')) {
+        const xml = `https://raw.githubusercontent.com/citation-style-language/styles/refs/heads/master/${this.citationType}.csl`;
+        const response = await fetch(xml);
+        const template = await response.text();
+        let config = plugins.config.get('@csl');
+        config.templates.add(this.citationType, template);
+      }
+
       const cite = await Cite.async(id, {forceType: '@pubmed/id'});
       const citation = (this.citationType === 'bibtex') ?
         cite.format(this.citationType) :
