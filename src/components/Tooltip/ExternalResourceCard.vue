@@ -294,7 +294,7 @@ export default {
 
         if (type === 'doi' || doi) {
           const doiID = type === 'doi' ? id : doi;
-          this.getCitationTextByDOI(doiID).then((text) => {
+          this.getFormattedCitationText(doiID, 'doi').then((text) => {
             const formattedText = this.replaceLinkInText(text);
             reference.citation[citationType] = formattedText;
             this.updateCopyContents();
@@ -305,7 +305,7 @@ export default {
             };
           });
         } else if (type === 'pmid') {
-          this.getCitationTextByPMID(id).then((text) => {
+          this.getFormattedCitationText(id, 'pmid').then((text) => {
             const formattedText = this.replaceLinkInText(text);
             reference.citation[citationType] = formattedText;
             this.updateCopyContents();
@@ -434,7 +434,7 @@ export default {
       const esearchAPI = `https://eutils.ncbi.nlm.nih.gov/entrez/eutils/esearch.fcgi?db=pubmed&term=${term}&format=json`;
       return await this.fetchData(esearchAPI);
     },
-    getCitationTextByPMID: async function (id) {
+    getFormattedCitationText: async function (id, type) {
       // because 'chicago' and 'ieee' are not in citation.js default styles
       if ((this.citationType !== 'bibtex') && (this.citationType !== 'apa')) {
         const xml = `https://raw.githubusercontent.com/citation-style-language/styles/refs/heads/master/${this.citationType}.csl`;
@@ -444,7 +444,13 @@ export default {
         config.templates.add(this.citationType, template);
       }
 
-      const cite = await Cite.async(id, {forceType: '@pubmed/id'});
+      const option = {};
+
+      if (type === 'pmid') {
+        option['forceType'] = '@pubmed/id';
+      }
+
+      const cite = await Cite.async(id, option);
       const citation = (this.citationType === 'bibtex') ?
         cite.format(this.citationType) :
         cite.format('bibliography', {
