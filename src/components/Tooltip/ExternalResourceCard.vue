@@ -69,7 +69,7 @@
 
 <script>
 import CopyToClipboard from '../CopyToClipboard/CopyToClipboard.vue';
-import { delay, getCitation as getFormattedCitationText } from '../utilities';
+import { delay, getCitationById } from '../utilities';
 
 const CROSSCITE_API_HOST = 'https://citation.doi.org';
 const CITATION_OPTIONS = [
@@ -294,8 +294,7 @@ export default {
 
         if (type === 'doi' || doi) {
           const doiID = type === 'doi' ? id : doi;
-          getFormattedCitationText({
-            id: doiID,
+          getCitationById(doiID, {
             type: 'doi',
             format: citationType
           }).then((text) => {
@@ -309,8 +308,7 @@ export default {
             };
           });
         } else if (type === 'pmid') {
-          getFormattedCitationText({
-            id: id,
+          getCitationById(id, {
             type: 'pmid',
             format: citationType
           }).then((text) => {

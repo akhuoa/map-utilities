@@ -56,11 +56,11 @@ const delay = (ms) => {
 
 /**
  * @param {id} id - DOI or PMID
- * @param {type} type - type of the ID, e.g., 'pmid'
- * @param {format} format - 'apa', 'bibtex', etc.
+ * @param {options:type} type - type of the ID, e.g., 'pmid'
+ * @param {options:format} format - 'apa' (default), 'chicago', 'ieee', 'bibtex', etc.
  * @returns {citation} formatted citation text
  */
-const getCitation = async ({id, type, format}) => {
+const getCitationById = async (id, { type, format }) => {
   // because 'chicago' and 'ieee' are not in citation.js default styles
   if ((format !== 'bibtex') && (format !== 'apa')) {
     const xml = `https://raw.githubusercontent.com/citation-style-language/styles/refs/heads/master/${format}.csl`;
@@ -91,5 +91,5 @@ export {
   capitalise,
   xmlToJSON,
   delay,
-  getCitation,
+  getCitationById,
 };
