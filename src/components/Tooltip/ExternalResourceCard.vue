@@ -68,14 +68,8 @@
 </template>
 
 <script>
-import { Cite, plugins } from '@citation-js/core';
-import '@citation-js/plugin-doi';
-import '@citation-js/plugin-csl';
-import '@citation-js/plugin-bibtex';
-import '@citation-js/plugin-pubmed';
-
 import CopyToClipboard from '../CopyToClipboard/CopyToClipboard.vue';
-import { delay } from '../utilities';
+import { delay, getCitation as getFormattedCitationText } from '../utilities';
 
 const CROSSCITE_API_HOST = 'https://citation.doi.org';
 const CITATION_OPTIONS = [
@@ -101,6 +95,9 @@ const LOADING_DELAY = 600;
 
 export default {
   name: "ExternalResourceCard",
+  components: {
+    CopyToClipboard,
+  },
   props: {
     resources: {
       type: Array,
@@ -297,7 +294,11 @@ export default {
 
         if (type === 'doi' || doi) {
           const doiID = type === 'doi' ? id : doi;
-          this.getFormattedCitationText(doiID, 'doi').then((text) => {
+          getFormattedCitationText({
+            id: doiID,
+            type: 'doi',
+            format: citationType
+          }).then((text) => {
             const formattedText = this.replaceLinkInText(text);
             reference.citation[citationType] = formattedText;
             this.updateCopyContents();
@@ -308,7 +309,11 @@ export default {
             };
           });
         } else if (type === 'pmid') {
-          this.getFormattedCitationText(id, 'pmid').then((text) => {
+          getFormattedCitationText({
+            id: id,
+            type: 'pmid',
+            format: citationType
+          }).then((text) => {
             const formattedText = this.replaceLinkInText(text);
             reference.citation[citationType] = formattedText;
             this.updateCopyContents();
@@ -436,32 +441,6 @@ export default {
     searchPMID: async function (term) {
       const esearchAPI = `https://eutils.ncbi.nlm.nih.gov/entrez/eutils/esearch.fcgi?db=pubmed&term=${term}&format=json`;
       return await this.fetchData(esearchAPI);
-    },
-    getFormattedCitationText: async function (id, type) {
-      // because 'chicago' and 'ieee' are not in citation.js default styles
-      if ((this.citationType !== 'bibtex') && (this.citationType !== 'apa')) {
-        const xml = `https://raw.githubusercontent.com/citation-style-language/styles/refs/heads/master/${this.citationType}.csl`;
-        const response = await fetch(xml);
-        const template = await response.text();
-        let config = plugins.config.get('@csl');
-        config.templates.add(this.citationType, template);
-      }
-
-      const option = {};
-
-      if (type === 'pmid') {
-        option['forceType'] = '@pubmed/id';
-      }
-
-      const cite = await Cite.async(id, option);
-      const citation = (this.citationType === 'bibtex') ?
-        cite.format(this.citationType) :
-        cite.format('bibliography', {
-          format: 'html',
-          template: this.citationType,
-          lang: 'en-US'
-        })
-      return citation;
     },
     getCitationTextByDOI: async function (id) {
       const citationAPI = `${this.crosscite_host}/format?doi=${id}&style=${this.citationType}&lang=en-US`;
