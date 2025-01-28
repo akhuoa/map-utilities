@@ -14,6 +14,7 @@ declare module 'vue' {
     CreateTooltipContent: typeof import('./components/Tooltip/CreateTooltipContent.vue')['default']
     DrawToolbar: typeof import('./components/DrawToolbar/DrawToolbar.vue')['default']
     ElButton: typeof import('element-plus/es')['ElButton']
+    ElCard: typeof import('element-plus/es')['ElCard']
     ElCol: typeof import('element-plus/es')['ElCol']
     ElColorPicker: typeof import('element-plus/es')['ElColorPicker']
     ElContainer: typeof import('element-plus/es')['ElContainer']
