@@ -191,6 +191,7 @@ export default {
   watch: {
     connectivityFromMap: function (oldVal, newVal) {
       if (oldVal != newVal) {
+        this.showSpinner();
         this.start();
       }
     }
@@ -282,7 +283,6 @@ export default {
           } else {
             this.loadingError = 'Loading error!';
           }
-          this.hideSpinner();
         })
         .catch((error) => {
           this.loadingError = 'Loading error!';
@@ -352,6 +352,8 @@ export default {
          */
         this.$emit('tap-node', data);
       });
+
+      this.hideSpinner();
     },
     query: async function (sql, params) {
       const url = `${this.mapServer}knowledge/query/`;
