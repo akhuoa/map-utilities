@@ -39,8 +39,9 @@ const drawnTypes = [
   { value: "None", label: "None" },
 ];
 const showConnectivityGraph = ref(false);
-const connectivityGraphEntry = "ilxtr:neuron-type-aacar-13";
+// const connectivityGraphEntry = "ilxtr:neuron-type-aacar-13";
 // const connectivityGraphEntry = "ilxtr:sparc-nlp/kidney/134";
+const connectivityGraphEntry = "ilxtr:neuron-type-aacar-12";
 const mapServer = "https://mapcore-demo.org/curation/flatmap/";
 const sckanVersion = "sckan-2024-09-21-npo";
 
