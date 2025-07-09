@@ -2,6 +2,46 @@
 // destinations = ilxtr:hasAxonPresynapticElementIn, ilxtr:hasAxonSensorySubcellularElementIn
 // via = ilxtr:hasAxonLeadingToSensorySubcellularElementIn, ilxtr:hasAxonLocatedIn
 
+async function query(flatmapAPI, sql, params) {
+  const url = `${flatmapAPI}knowledge/query/`;
+  const query = { sql, params };
+
+  try {
+    const response = await fetch(url, {
+      method: 'POST',
+      headers: {
+        "Accept": "application/json; charset=utf-8",
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify(query)
+    });
+
+    if (!response.ok) {
+      throw new Error(`Cannot access ${url}`);
+    }
+
+    return await response.json();
+  } catch {
+    return {
+      values: []
+    };
+  }
+}
+
+async function fetchLabels(flatmapAPI, labelledTerms) {
+  if (!labelledTerms.length) return [];
+
+  const data = await query(
+    flatmapAPI,
+    `select entity, knowledge from knowledge
+      where entity in (?${', ?'.repeat(labelledTerms.length - 1)})
+      order by source desc`,
+    [...labelledTerms]
+  );
+
+  return await data.values;
+}
+
 function filterOrigins(item) {
   const soma = item["node-phenotypes"]?.["ilxtr:hasSomaLocatedIn"];
   return Array.isArray(item.connectivity) &&
@@ -66,7 +106,32 @@ function getPhenotypeItems(obj, prop) {
   return arr;
 }
 
-function extractOriginItems(knowledge) {
+async function transformResults(flatmapAPI, results) {
+  const baseResults = Array.from(
+    new Map(results.map(item => [JSON.stringify(item), item])).values()
+  );
+  const terms = baseResults.flat(Infinity);
+  const uniqueTerms = [...new Set(terms)];
+  const fetchResults = await fetchLabels(flatmapAPI, uniqueTerms);
+  const objectResults = fetchResults.map((item) => JSON.parse(item[1]));
+  const formattedResults = baseResults.map((item) => {
+    const itemPair = item.flat();
+    const labels = [];
+    for (let i = 0; i < itemPair.length; i++) {
+      const foundObj = objectResults.find((obj) => obj.id === itemPair[i])
+      if (foundObj) {
+        labels.push(foundObj.label);
+      }
+    }
+    return {
+      key: item,
+      label: labels.join(', '),
+    };
+  });
+  return formattedResults;
+}
+
+async function extractOriginItems(flatmapAPI, knowledge) {
   const results = [];
   knowledge.forEach(obj => {
     if (!Array.isArray(obj.connectivity) || obj.connectivity.length === 0) return;
@@ -76,12 +141,10 @@ function extractOriginItems(knowledge) {
       if (connectivityItems.has(stringifyItem)) results.push(item);
     });
   });
-  return Array.from(
-    new Map(results.map(item => [JSON.stringify(item), item])).values()
-  );
+  return await transformResults(flatmapAPI, results);
 }
 
-function extractDestinationItems(knowledge) {
+async function extractDestinationItems(flatmapAPI, knowledge) {
   const results = [];
   knowledge.forEach(obj => {
     if (!Array.isArray(obj.connectivity) || obj.connectivity.length === 0) return;
@@ -94,12 +157,10 @@ function extractDestinationItems(knowledge) {
       if (connectivityItems.has(stringifyItem)) results.push(item);
     });
   });
-  return Array.from(
-    new Map(results.map(item => [JSON.stringify(item), item])).values()
-  );
+  return await transformResults(flatmapAPI, results);
 }
 
-function extractViaItems(knowledge) {
+async function extractViaItems(flatmapAPI, knowledge) {
   const results = [];
   knowledge.forEach(obj => {
     if (!Array.isArray(obj.connectivity) || obj.connectivity.length === 0) return;
@@ -112,39 +173,53 @@ function extractViaItems(knowledge) {
       if (connectivityItems.has(stringifyItem)) results.push(item);
     });
   });
-  return Array.from(
-    new Map(results.map(item => [JSON.stringify(item), item])).values()
-  );
+  return await transformResults(flatmapAPI, results);
 }
 
-function findPathsByOriginItem(knowledge, originItem) {
+function findPathsByOriginItem(knowledge, originItems) {
   return knowledge.filter(obj => {
     if (!Array.isArray(obj.connectivity) || obj.connectivity.length === 0) return false;
     const origins = getPhenotypeItems(obj, "ilxtr:hasSomaLocatedIn");
-    return origins.some(item => JSON.stringify(item) === JSON.stringify(originItem));
+    return origins.some(item => originItems.map(i => JSON.stringify(i)).includes(JSON.stringify(item)));
   });
 }
 
-function findPathsByDestinationItem(knowledge, destinationItem) {
+function findPathsByDestinationItem(knowledge, destinationItems) {
   return knowledge.filter(obj => {
     if (!Array.isArray(obj.connectivity) || obj.connectivity.length === 0) return false;
     const destinations = [
       ...getPhenotypeItems(obj, "ilxtr:hasAxonPresynapticElementIn"),
       ...getPhenotypeItems(obj, "ilxtr:hasAxonSensorySubcellularElementIn")
     ];
-    return destinations.some(item => JSON.stringify(item) === JSON.stringify(destinationItem));
+    return destinations.some(item => destinationItems.map(i => JSON.stringify(i)).includes(JSON.stringify(item)));
   });
 }
 
-function findPathsByViaItem(knowledge, viaItem) {
+function findPathsByViaItem(knowledge, viaItems) {
   return knowledge.filter(obj => {
     if (!Array.isArray(obj.connectivity) || obj.connectivity.length === 0) return false;
     const vias = [
       ...getPhenotypeItems(obj, "ilxtr:hasAxonLeadingToSensorySubcellularElementIn"),
       ...getPhenotypeItems(obj, "ilxtr:hasAxonLocatedIn")
     ];
-    return vias.some(item => JSON.stringify(item) === JSON.stringify(viaItem));
+    return vias.some(item => viaItems.map(i => JSON.stringify(i)).includes(JSON.stringify(item)));
   });
+}
+
+async function queryPathsByRouteFromKnowledge({ knowledge, origins, destinations, vias }) {
+  let results = knowledge;
+
+  if (origins.length) {
+    results = findPathsByOriginItem(results, origins);
+  }
+  if (destinations.length) {
+    results = findPathsByDestinationItem(results, destinations);
+  }
+  if (vias.length) {
+    results = findPathsByViaItem(results, vias);
+  }
+
+  return results;
 }
 
 export {
@@ -157,4 +232,6 @@ export {
   findPathsByOriginItem,
   findPathsByDestinationItem,
   findPathsByViaItem,
+  queryPathsByRouteFromKnowledge,
+  fetchLabels,
 }
