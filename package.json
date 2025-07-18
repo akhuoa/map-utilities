@@ -1,6 +1,6 @@
 {
   "name": "@abi-software/map-utilities",
-  "version": "1.6.1-beta.4",
+  "version": "1.6.1-beta.5",
   "files": [
     "dist/*",
     "src/*",
