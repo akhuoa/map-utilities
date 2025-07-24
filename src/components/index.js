@@ -14,6 +14,8 @@ import {
   queryPathsByOrigin,
   queryPathsByViaLocation,
   queryPathsByDestination,
+  queryPathsByRoute,
+  queryForwardBackwardConnections,
 } from "./CompetencyQueries/CompetencyQueries.js";
 import {
   filterOrigins,
@@ -25,6 +27,8 @@ import {
   findPathsByOriginItem,
   findPathsByDestinationItem,
   findPathsByViaItem,
+  queryPathsByRouteFromKnowledge,
+  fetchLabels,
 } from "./CompetencyQueries/knowledgeQueries.js";
 
 export {
@@ -43,6 +47,8 @@ export {
   queryPathsByOrigin,
   queryPathsByViaLocation,
   queryPathsByDestination,
+  queryPathsByRoute,
+  queryForwardBackwardConnections,
   filterOrigins,
   filterDestinations,
   filterViaLocations,
@@ -52,4 +58,6 @@ export {
   findPathsByOriginItem,
   findPathsByDestinationItem,
   findPathsByViaItem,
+  queryPathsByRouteFromKnowledge,
+  fetchLabels,
 };
