@@ -119,11 +119,20 @@ async function transformResults(flatmapAPI, knowledgeSource, results) {
   const objectResults = fetchResults.reduce((arr, item) => {
     const id = item[0];
     const valObj = JSON.parse(item[1]);
-    if (valObj.source === knowledgeSource) {
-      arr.push({ id, label: valObj.label });
-    }
+    arr.push({ id, label: valObj.label, source: valObj.source });
     return arr;
   }, []);
+
+  // sort matched knowledgeSource items for same id
+  objectResults.sort((a, b) => {
+    if (a.id === b.id) {
+      if (a.source === knowledgeSource && b.source !== knowledgeSource) return -1;
+      if (a.source !== knowledgeSource && b.source === knowledgeSource) return 1;
+      return 0;
+    }
+    return a.id.localeCompare(b.id);
+  });
+
   const nodes = [];
   const formattedResults = baseResults.map((item) => {
     const itemPair = item.flat();
