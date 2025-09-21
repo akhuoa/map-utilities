@@ -182,7 +182,7 @@ export default {
       return this.entry.destinationsWithDatasets;
     },
     resources: function () {
-      return this.entry.hyperlinks;
+      return this.entry.hyperlinks || [];
     },
   },
   watch: {
