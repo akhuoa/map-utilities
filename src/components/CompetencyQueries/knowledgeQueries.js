@@ -315,7 +315,8 @@ async function getFlatmapFilterOptions (flatmapAPI, mapImp, providedKnowledge, p
     }
 
     const mapKnowledge = mapImp.pathways.paths;
-    const flatmapKnowledge = providedKnowledge.reduce((arr, knowledge) => {
+    const flatmapKnowledge = [];
+    for (const knowledge of flatmapKnowledge) {
       const id = knowledge.id;
       if (id) {
         const mapKnowledgeObj = mapKnowledge[id];
@@ -331,11 +332,11 @@ async function getFlatmapFilterOptions (flatmapAPI, mapImp, providedKnowledge, p
             }
           }
           // to avoid mutation
-          arr.push(JSON.parse(JSON.stringify(knowledge)));
+          flatmapKnowledge.push(JSON.parse(JSON.stringify(knowledge)));
         }
       }
-      return arr;
-    }, []);
+    }
+
     const knowledgeSource = mapImp.knowledgeSource;
     const originItems = await extractOriginItems(flatmapAPI, knowledgeSource, flatmapKnowledge);
     const viaItems = await extractViaItems(flatmapAPI, knowledgeSource, flatmapKnowledge);
