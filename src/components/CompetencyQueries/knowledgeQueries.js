@@ -316,7 +316,7 @@ async function getFlatmapFilterOptions (flatmapAPI, mapImp, providedKnowledge, p
 
     const mapKnowledge = mapImp.pathways.paths;
     const flatmapKnowledge = [];
-    for (const knowledge of flatmapKnowledge) {
+    for (const knowledge of providedKnowledge) {
       const id = knowledge.id;
       if (id) {
         const mapKnowledgeObj = mapKnowledge[id];
