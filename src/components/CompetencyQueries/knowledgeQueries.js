@@ -323,16 +323,22 @@ async function getFlatmapFilterOptions (flatmapAPI, mapImp, providedKnowledge, p
         if (mapKnowledgeObj && mapKnowledgeObj.connectivity && mapKnowledgeObj['node-phenotypes']) {
           const mapConnectivity = mapKnowledgeObj.connectivity;
           const mapNodePhenotypes = mapKnowledgeObj['node-phenotypes'];
-          // take only map connectivity
-          knowledge.connectivity = [...mapConnectivity];
+
+          // Create a new object with only the necessary properties to avoid mutation
+          const filteredNodePhenotypes = {};
           for (let key in knowledge['node-phenotypes']) {
             if (mapNodePhenotypes[key]) {
               // take only map node-phenotypes
-              knowledge['node-phenotypes'][key] = [...mapNodePhenotypes[key]];
+              filteredNodePhenotypes[key] = [...mapNodePhenotypes[key]];
             }
           }
-          // to avoid mutation
-          flatmapKnowledge.push(JSON.parse(JSON.stringify(knowledge)));
+
+          // Build new object with filtered data instead of deep cloning
+          flatmapKnowledge.push({
+            ...knowledge,
+            connectivity: [...mapConnectivity],
+            'node-phenotypes': filteredNodePhenotypes
+          });
         }
       }
     }
