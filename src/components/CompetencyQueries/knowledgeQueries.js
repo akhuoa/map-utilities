@@ -119,11 +119,20 @@ async function transformResults(flatmapAPI, knowledgeSource, results) {
   const objectResults = fetchResults.reduce((arr, item) => {
     const id = item[0];
     const valObj = JSON.parse(item[1]);
-    if (valObj.source === knowledgeSource) {
-      arr.push({ id, label: valObj.label });
-    }
+    arr.push({ id, label: valObj.label, source: valObj.source });
     return arr;
   }, []);
+
+  // sort matched knowledgeSource items for same id
+  objectResults.sort((a, b) => {
+    if (a.id === b.id) {
+      if (a.source === knowledgeSource && b.source !== knowledgeSource) return -1;
+      if (a.source !== knowledgeSource && b.source === knowledgeSource) return 1;
+      return 0;
+    }
+    return a.id.localeCompare(b.id);
+  });
+
   const nodes = [];
   const formattedResults = baseResults.map((item) => {
     const itemPair = item.flat();
@@ -306,27 +315,34 @@ async function getFlatmapFilterOptions (flatmapAPI, mapImp, providedKnowledge, p
     }
 
     const mapKnowledge = mapImp.pathways.paths;
-    const flatmapKnowledge = providedKnowledge.reduce((arr, knowledge) => {
+    const flatmapKnowledge = [];
+    for (const knowledge of providedKnowledge) {
       const id = knowledge.id;
       if (id) {
         const mapKnowledgeObj = mapKnowledge[id];
         if (mapKnowledgeObj && mapKnowledgeObj.connectivity && mapKnowledgeObj['node-phenotypes']) {
           const mapConnectivity = mapKnowledgeObj.connectivity;
           const mapNodePhenotypes = mapKnowledgeObj['node-phenotypes'];
-          // take only map connectivity
-          knowledge.connectivity = [...mapConnectivity];
+
+          // Create a new object with only the necessary properties to avoid mutation
+          const filteredNodePhenotypes = {};
           for (let key in knowledge['node-phenotypes']) {
             if (mapNodePhenotypes[key]) {
               // take only map node-phenotypes
-              knowledge['node-phenotypes'][key] = [...mapNodePhenotypes[key]];
+              filteredNodePhenotypes[key] = [...mapNodePhenotypes[key]];
             }
           }
-          // to avoid mutation
-          arr.push(JSON.parse(JSON.stringify(knowledge)));
+
+          // Build new object with filtered data instead of deep cloning
+          flatmapKnowledge.push({
+            ...knowledge,
+            connectivity: [...mapConnectivity],
+            'node-phenotypes': filteredNodePhenotypes
+          });
         }
       }
-      return arr;
-    }, []);
+    }
+
     const knowledgeSource = mapImp.knowledgeSource;
     const originItems = await extractOriginItems(flatmapAPI, knowledgeSource, flatmapKnowledge);
     const viaItems = await extractViaItems(flatmapAPI, knowledgeSource, flatmapKnowledge);
