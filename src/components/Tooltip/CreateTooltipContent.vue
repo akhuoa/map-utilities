@@ -1,10 +1,10 @@
 <template>
   <el-container class="create-container">
     <el-header height="30px" class="header">
-      <div>Create {{ createData.shape }}</div>
+      <div>{{ dialogTitle }}</div>
     </el-header>
     <el-main class="slides-block">
-      <span class="create-text">
+      <span class="create-text" v-if="createData.editingIndex === -1">
         Primitives will be created in the __annotation region
       </span>
       <el-row class="row" v-show="showPoint">
@@ -99,10 +99,16 @@ export default {
   watch: {
     "createData.shape": {
       handler: function (newValue, oldValue) {
-        this.group = newValue;
+        this.group = this.createData.tempGroupName ? this.createData.tempGroupName : newValue;
         if (oldValue !== undefined) {
           this.$emit("cancel-create");
         }
+      },
+      immediate: true,
+    },
+    "createData.tempGroupName": {
+      handler: function (newValue, oldValue) {
+        this.group = newValue ? newValue : this.createData.shape;
       },
       immediate: true,
     },
@@ -113,6 +119,13 @@ export default {
         return "Edit";
       }
       return "Confirm";
+    },
+    dialogTitle: function() {
+      if (this.createData.editingIndex > -1) {
+        return `Edit ${this.createData.shape}`;
+      } else {
+        return `Create ${this.createData.shape}`;
+      }
     },
   },
   data: function () {
@@ -125,9 +138,9 @@ export default {
   methods: {
     confirm: function () {
       this.$emit(
-        "confirm-create", 
-        { 
-          region: "__annotation/" + this.region, 
+        "confirm-create",
+        {
+          region: "__annotation/" + this.region,
           group: this.group,
           shape: this.createData.shape,
           editingIndex: this.createData.editingIndex,
@@ -166,6 +179,7 @@ export default {
 
 .create-container {
   width: 100%;
+  min-width:200px;
   height: auto;
   border-radius: 4px;
   border: solid 1px #d8dce6;
