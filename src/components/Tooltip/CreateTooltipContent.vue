@@ -4,8 +4,8 @@
       <div>{{ dialogTitle }}</div>
     </el-header>
     <el-main class="slides-block">
-      <span class="create-text" v-if="createData.editingIndex === -1">
-        Primitives will be created in the __annotation region
+      <span class="create-text" v-if="createData.editingIndex === -1 && targetRegion">
+        {{ `Primitives will be created in the ${targetRegion} region` }}
       </span>
       <el-row class="row" v-show="showPoint">
         <el-col :offset="0" :span="8">
@@ -22,11 +22,21 @@
           Region:
         </el-col>
         <el-col :offset="0" :span="16">
-          <el-input
+          <el-autocomplete
+            class="autocomplete-box"
+            :fit-input-width="true"
             v-model="region"
-            placeholder="__annotation"
-            size="small"
-          />
+            :placeholder="targetRegion"
+            :fetch-suggestions="fetchRegionSuggestions"
+            :teleported="true"
+            popper-class="autocomplete-popper"
+          >
+            <template #default="{ item }">
+              <div class="suggested-value">
+                {{ item.value }}
+              </div>
+            </template>
+          </el-autocomplete>
         </el-col>
       </el-row>
       <el-row class="row">
@@ -34,11 +44,21 @@
           Group:
         </el-col>
         <el-col :offset="0" :span="16">
-          <el-input
+          <el-autocomplete
+            class="autocomplete-box"
+            :fit-input-width="true"
             v-model="group"
             :placeholder="createData.shape"
-            size="small"
-          />
+            :fetch-suggestions="fetchGroupSuggestions"
+            :teleported="true"
+            popper-class="autocomplete-popper"
+          >
+            <template #default="{ item }">
+              <div class="suggested-value">
+                {{ item.value }}
+              </div>
+            </template>
+          </el-autocomplete>
         </el-col>
       </el-row>
       <el-row>
@@ -67,8 +87,8 @@
 
 <script>
 /* eslint-disable no-alert, no-console */
-
 import {
+  ElAutocomplete as Autocomplete,
   ElButton as Button,
   ElCol as Col,
   ElContainer as Container,
@@ -84,6 +104,7 @@ import {
 export default {
   name: "CreateTooltipContent",
   components: {
+    Autocomplete,
     Button,
     Col,
     Container,
@@ -127,6 +148,12 @@ export default {
         return `Create ${this.createData.shape}`;
       }
     },
+    targetRegion: function() {
+      if ('regionPrefix' in this.createData) {
+        return this.createData.regionPrefix;
+      }
+      return "";
+    },
   },
   data: function () {
     return {
@@ -140,7 +167,7 @@ export default {
       this.$emit(
         "confirm-create",
         {
-          region: "__annotation/" + this.region,
+          region: this.targetRegion + this.region,
           group: this.group,
           shape: this.createData.shape,
           editingIndex: this.createData.editingIndex,
@@ -150,6 +177,14 @@ export default {
     },
     cancel: function () {
       this.$emit("cancel-create");
+    },
+    fetchRegionSuggestions: function(term, cb) {
+      cb([]);
+      this.$emit("create-region-suggestions", {term, cb});
+    },
+    fetchGroupSuggestions: function(term, cb) {
+      cb([]);
+      this.$emit("create-group-suggestions", {term, cb, region: this.region});
     },
   },
 };
@@ -165,21 +200,20 @@ export default {
   font-size: 14px;
 }
 
+:deep(.create-text) {
+  max-width: 220px;
+  height: 35px;
+  font-size: 12px;
+}
+
 .row {
   margin: 4px;
   text-align: left;
 }
 
-:deep(.create-text) {
-  max-width: 220px;
-  height:35px;
-  font-size: 12px;
-}
-
-
 .create-container {
-  width: 100%;
-  min-width:200px;
+  width: 320px;
+
   height: auto;
   border-radius: 4px;
   border: solid 1px #d8dce6;
@@ -189,27 +223,39 @@ export default {
   pointer-events: auto;
 }
 
+:deep(.autocomplete-box) {
+  position: relative;
+  font-size: 12px;
+  display: inline-flex;
+  width: var(--el-input-width);
+  line-height: var(--el-input-height);
+  box-sizing: border-box;
+  vertical-align: middle;
+  .el-input__inner {
+    height: 24px;
+  }
+}
+
+.autocomplete-popper {
+  li {
+    line-height: normal;
+    padding: 7px;
+
+    .suggested-value {
+      font-family: "Asap", sans-serif;
+      text-align: left;
+      white-space: initial;
+    }
+
+    .el-input__inner {
+      font-size: 12px;
+    }
+  }
+}
+
 .value {
   font-size: 12px;
 }
 
-.input-box {
-  width: 42px;
-  border-radius: 4px;
-  border: 1px solid rgb(144, 147, 153);
-  background-color: var(--white);
-  font-weight: 500;
-  color: rgb(48, 49, 51);
-  margin-left: 8px;
-  height: 24px;
-
-  &.number-input {
-    width: 42px;
-    :deep(.el-input__wrapper) {
-      padding-left: 0px;
-      padding-right: 0px;
-    }
-  }
-}
 
 </style>
