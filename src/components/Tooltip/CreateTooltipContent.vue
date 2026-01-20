@@ -61,12 +61,18 @@
           </el-autocomplete>
         </el-col>
       </el-row>
+      <el-row v-if="!canBeConfirmed" class="row">
+        <div class="warning-message">
+          Group must be enterd before this action can be confirmed.
+        </div>
+      </el-row>
       <el-row>
         <el-col :offset="0" :span="12">
           <el-button
             type="primary"
             plain
             @click="confirm"
+            :disabled="!canBeConfirmed"
           >
             {{ confirmText }}
           </el-button>
@@ -115,12 +121,26 @@ export default {
   props: {
     createData: {
       type: Object,
+      default:{
+        drawingBox: false,
+        toBeConfirmed: false,
+        points: [],
+        tempGroupName: undefined,
+        shape: "",
+        x: 0,
+        y: 0,
+        editingIndex: -1,
+        faceIndex: -1,
+        toBeDeleted: false,
+        regionPrefix: "__annotation"
+      },
     },
   },
   watch: {
     "createData.shape": {
       handler: function (newValue, oldValue) {
-        this.group = this.createData.tempGroupName ? this.createData.tempGroupName : newValue;
+        this.group = (this.createData.tempGroupName) ?
+        this.createData.tempGroupName : "";
         if (oldValue !== undefined) {
           this.$emit("cancel-create");
         }
@@ -128,13 +148,19 @@ export default {
       immediate: true,
     },
     "createData.tempGroupName": {
-      handler: function (newValue, oldValue) {
-        this.group = newValue ? newValue : this.createData.shape;
+      handler: function (newValue) {
+        this.group = newValue ? newValue : "";
       },
       immediate: true,
     },
   },
   computed: {
+    canBeConfirmed: function() {
+      if (this.createData.editingIndex > -1 || this.group) {
+        return true;
+      }
+      return false;
+    },
     confirmText: function () {
       if (this.createData.editingIndex > -1) {
         return "Edit";
@@ -251,6 +277,11 @@ export default {
       font-size: 12px;
     }
   }
+}
+
+.warning-message {
+  font-size: 10px;
+  color: #FF8400;
 }
 
 .value {
