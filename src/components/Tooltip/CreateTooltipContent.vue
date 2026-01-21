@@ -46,6 +46,7 @@
         <el-col :offset="0" :span="16">
           <el-autocomplete
             class="autocomplete-box"
+            :disabled="createData.editingIndex > -1"
             :fit-input-width="true"
             v-model="group"
             :placeholder="createData.shape"
@@ -123,6 +124,7 @@ export default {
       type: Object,
       default:{
         drawingBox: false,
+        renaming: false,
         toBeConfirmed: false,
         points: [],
         tempGroupName: undefined,
@@ -139,8 +141,7 @@ export default {
   watch: {
     "createData.shape": {
       handler: function (newValue, oldValue) {
-        this.group = (this.createData.tempGroupName) ?
-        this.createData.tempGroupName : "";
+        this.group = (this.createData.tempGroupName) ? this.createData.tempGroupName : "";
         if (oldValue !== undefined) {
           this.$emit("cancel-create");
         }
@@ -156,14 +157,22 @@ export default {
   },
   computed: {
     canBeConfirmed: function() {
-      if (this.createData.editingIndex > -1 || this.group) {
+      if (this.createData.editingIndex > -1) {
         return true;
+      } else if (this.group) {
+        if (!this.renaming) {
+          return true;
+        } else if (this.group !== this.createData.tempGroupName) {
+          return true;
+        }
       }
       return false;
     },
     confirmText: function () {
       if (this.createData.editingIndex > -1) {
         return "Edit";
+      } else if (this.createData.renaming) {
+        return "Rename";
       }
       return "Confirm";
     },
@@ -197,6 +206,7 @@ export default {
           group: this.group,
           shape: this.createData.shape,
           editingIndex: this.createData.editingIndex,
+          renaming: this.createData.renaming,
         }
       );
       this.group = this.createData.shape;
