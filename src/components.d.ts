@@ -11,6 +11,7 @@ declare module 'vue' {
     ConnectionDialog: typeof import('./components/DrawToolbar/ConnectionDialog.vue')['default']
     ConnectivityGraph: typeof import('./components/ConnectivityGraph/ConnectivityGraph.vue')['default']
     ConnectivityList: typeof import('./components/ConnectivityList/ConnectivityList.vue')['default']
+    ConnectivityListNew: typeof import('./components/ConnectivityList/ConnectivityListNew.vue')['default']
     CopyToClipboard: typeof import('./components/CopyToClipboard/CopyToClipboard.vue')['default']
     CreateTooltipContent: typeof import('./components/Tooltip/CreateTooltipContent.vue')['default']
     DrawToolbar: typeof import('./components/DrawToolbar/DrawToolbar.vue')['default']

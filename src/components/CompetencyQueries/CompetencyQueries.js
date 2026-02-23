@@ -29,6 +29,48 @@ async function _postRequest(API_URL, payload) {
 }
 
 /**
+ * CQ query 27 [temp]: Single Connectivity List
+ * @param {*} mapuuid
+ * @param {*} pathId
+ * @returns combined connectivity list
+ */
+async function querySingleConnectivityList (mapuuid, pathId) {
+  const API_URL = 'http://localhost:9000/27'; // TODO: to update to the actual endpoint when ready
+  const payload = {
+    "query_id": "27",
+    "parameters": [
+      {
+        "column": "source_id",
+        "value": [mapuuid]
+      },
+      {
+        "column": "path_id",
+        "value": [pathId]
+      }
+    ]
+  };
+
+  try {
+    const response = await fetch(API_URL, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(payload),
+    });
+
+    if (!response.ok) {
+      throw new Error(`API Error: ${response.status} ${response.statusText}`);
+    }
+
+    return await response.json();
+  } catch (error) {
+    console.error("Request failed:", error);
+    throw error;
+  }
+}
+
+/**
  * Competency Query
  * @public
  * @param {Object} options - Query options.
@@ -392,4 +434,5 @@ export {
   queryPathsByDestination,
   queryPathsByRoute,
   queryForwardBackwardConnections,
+  querySingleConnectivityList,
 };
