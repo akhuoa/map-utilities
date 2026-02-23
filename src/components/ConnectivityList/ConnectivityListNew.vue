@@ -42,7 +42,7 @@
         v-for="(origin, i) in originsCombinations"
         class="attribute-content"
         :origin-item-label="origin.mapLabel"
-        :key="origin.sckanId"
+        :key="origin.sckanLabel"
         @mouseenter="onConnectivityHovered(origin, $event)"
         @mouseleave="onConnectivityHovered()"
       >
@@ -94,7 +94,7 @@
         v-for="(component, i) in componentsCombinations"
         class="attribute-content"
         :component-item-label="component.mapLabel"
-        :key="component.sckanId"
+        :key="component.sckanLabel"
         @mouseenter="onConnectivityHovered(component, $event)"
         @mouseleave="onConnectivityHovered()"
       >
@@ -148,7 +148,7 @@
         v-for="(destination, i) in destinationsCombinations"
         class="attribute-content"
         :destination-item-label="destination.mapLabel"
-        :key="destination.sckanId"
+        :key="destination.sckanLabel"
         @mouseenter="onConnectivityHovered(destination, $event)"
         @mouseleave="onConnectivityHovered()"
       >
@@ -333,7 +333,7 @@ export default {
           this.connectivityError.errorMessage =
             `<strong>${combination.sckanLabel}</strong> from the SCKAN is not available on the Map.`;
         } else if (combination.mapId) {
-          if (combination.sckanId !== combination.mapId) {
+          if (JSON.stringify(combination.sckanId) !== JSON.stringify(combination.mapId)) {
             this.connectivityError.hasError = true;
             this.connectivityError.errorMessage =
               `<strong>${combination.sckanLabel}</strong> from the SCKAN
