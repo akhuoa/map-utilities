@@ -7,7 +7,7 @@
       trigger="manual"
       :teleported="false"
       placement="left-start"
-      :visible="(connectivityError.hasError && connectivityError.errorMessage ? true : false)"
+      :visible="connectivityError.hasError && !!connectivityError.errorMessage"
       :popper-class="connectivityError.errorType === 'warning' ? 'connectivity-warning-container' : 'connectivity-error-container'"
     >
       <template #reference>
@@ -298,6 +298,7 @@ export default {
         sensory: 'is the location of the initial cell body in the PNS circuit',
       },
       facetList: [],
+      clearErrorTimeout: null,
     }
   },
   watch: {
@@ -327,10 +328,13 @@ export default {
       return capitalise(text)
     },
     onConnectivityHovered: function (combination, ele) {
-      // Reset error message
-      this.connectivityError.hasError = false;
-      this.connectivityError.errorType = '';
-      this.connectivityError.errorMessage = '';
+      if (this.clearErrorTimeout) {
+        clearTimeout(this.clearErrorTimeout);
+        this.clearErrorTimeout = null;
+      }
+
+      // Compute the new error state first
+      let newError = { hasError: false, errorType: '', errorMessage: '' };
 
       if (combination) {
         if (combination.mapId.length) {
@@ -341,20 +345,39 @@ export default {
 
           // If the SCKAN term and the Map term are different, show warning message.
           if (JSON.stringify(combination.sckanId) !== JSON.stringify(combination.mapId)) {
-            this.connectivityError.hasError = true;
-            this.connectivityError.errorType = 'warning';
-            this.connectivityError.errorMessage =
-              `<strong>${combination.sckanLabel}</strong> from the SCKAN
-              has been mapped to <strong>${combination.mapLabel}</strong> on the Map.`;
+            newError = {
+              hasError: true,
+              errorType: 'warning',
+              errorMessage: `<strong>${combination.sckanLabel}</strong> from the SCKAN
+                            has been mapped to <strong>${combination.mapLabel}</strong> on the Map.`,
+            };
           }
         } else if (combination.sckanId.length) {
           // If there is no mapId but there is sckanId,
           // it means the SCKAN term is not available on the Map.
-          this.connectivityError.hasError = true;
-          this.connectivityError.errorType = 'error';
-          this.connectivityError.errorMessage =
-            `<strong>${combination.sckanLabel}</strong> from the SCKAN is not available on the Map.`;
+          newError = {
+            hasError: true,
+            errorType: 'error',
+            errorMessage: `<strong>${combination.sckanLabel}</strong> from the SCKAN
+                          is not available on the Map.`,
+          };
         }
+      }
+
+      if (newError.hasError) {
+        // Show new error immediately with content
+        this.connectivityError.errorType = newError.errorType;
+        this.connectivityError.errorMessage = newError.errorMessage;
+        this.connectivityError.hasError = true;
+      } else {
+        // Hide the popover immediately, then clear content after transition (~300ms)
+        // so the popover fades out with content still visible (not as empty box)
+        this.connectivityError.hasError = false;
+        this.clearErrorTimeout = setTimeout(() => {
+          this.connectivityError.errorType = '';
+          this.connectivityError.errorMessage = '';
+          this.clearErrorTimeout = null;
+        }, 350);
       }
 
       if (ele) {
