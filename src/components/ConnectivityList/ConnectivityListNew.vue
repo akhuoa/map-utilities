@@ -327,21 +327,19 @@ export default {
       return capitalise(text)
     },
     onConnectivityHovered: function (combination, ele) {
-      // reset
+      // Reset error message
       this.connectivityError.hasError = false;
       this.connectivityError.errorType = '';
       this.connectivityError.errorMessage = '';
 
       if (combination) {
-        if (!combination.mapId.length && combination.sckanId.length) {
-          this.connectivityError.hasError = true;
-          this.connectivityError.errorType = 'error';
-          this.connectivityError.errorMessage =
-            `<strong>${combination.sckanLabel}</strong> from the SCKAN is not available on the Map.`;
-        } else if (combination.mapId.length) {
+        if (combination.mapId.length) {
+          // If there is mapId, it exists on the map.
+          // Show hover highlight on the map.
           const hoveredLabel = combination.mapLabel.toLowerCase();
           this.$emit('connectivity-hovered', hoveredLabel);
 
+          // If the SCKAN term and the Map term are different, show warning message.
           if (JSON.stringify(combination.sckanId) !== JSON.stringify(combination.mapId)) {
             this.connectivityError.hasError = true;
             this.connectivityError.errorType = 'warning';
@@ -349,6 +347,13 @@ export default {
               `<strong>${combination.sckanLabel}</strong> from the SCKAN
               has been mapped to <strong>${combination.mapLabel}</strong> on the Map.`;
           }
+        } else if (combination.sckanId.length) {
+          // If there is no mapId but there is sckanId,
+          // it means the SCKAN term is not available on the Map.
+          this.connectivityError.hasError = true;
+          this.connectivityError.errorType = 'error';
+          this.connectivityError.errorMessage =
+            `<strong>${combination.sckanLabel}</strong> from the SCKAN is not available on the Map.`;
         }
       }
 
