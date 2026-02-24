@@ -55,7 +55,7 @@
           <template #reference>
             <el-icon
               class="magnify-glass"
-              v-show="shouldShowMagnifyGlass(origin.mapLabel)"
+              v-show="origin.mapLabel"
               @click="onConnectivityClicked(origin.mapLabel)"
             >
               <el-icon-search />
@@ -107,7 +107,7 @@
           <template #reference>
             <el-icon
               class="magnify-glass"
-              v-show="shouldShowMagnifyGlass(component.mapLabel)"
+              v-show="component.mapLabel"
               @click="onConnectivityClicked(component.mapLabel)"
             >
               <el-icon-search />
@@ -161,7 +161,7 @@
           <template #reference>
             <el-icon
               class="magnify-glass"
-              v-show="shouldShowMagnifyGlass(destination.mapLabel)"
+              v-show="destination.mapLabel"
               @click="onConnectivityClicked(destination.mapLabel)"
             >
               <el-icon-search />
