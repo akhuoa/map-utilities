@@ -8,7 +8,7 @@
       :teleported="false"
       placement="left-start"
       :visible="(connectivityError.hasError && connectivityError.errorMessage ? true : false)"
-      popper-class="connectivity-error-container"
+      :popper-class="connectivityError.errorType === 'warning' ? 'connectivity-warning-container' : 'connectivity-error-container'"
     >
       <template #reference>
         <div class="connectivity-alert"
@@ -330,25 +330,30 @@ export default {
       if (combination) {
         if (!combination.mapId && combination.sckanId) {
           this.connectivityError.hasError = true;
+          this.connectivityError.errorType = 'error';
           this.connectivityError.errorMessage =
             `<strong>${combination.sckanLabel}</strong> from the SCKAN is not available on the Map.`;
         } else if (combination.mapId) {
           if (JSON.stringify(combination.sckanId) !== JSON.stringify(combination.mapId)) {
             this.connectivityError.hasError = true;
+            this.connectivityError.errorType = 'warning';
             this.connectivityError.errorMessage =
               `<strong>${combination.sckanLabel}</strong> from the SCKAN
               has been mapped to <strong>${combination.mapLabel}</strong> on the Map.`;
           } else {
             this.connectivityError.hasError = false;
+            this.connectivityError.errorType = '';
             this.connectivityError.errorMessage = '';
             this.$emit('connectivity-hovered', combination.mapLabel);
           }
         } else {
           this.connectivityError.hasError = false;
+          this.connectivityError.errorType = '';
           this.connectivityError.errorMessage = '';
         }
       } else {
         this.connectivityError.hasError = false;
+        this.connectivityError.errorType = '';
         this.connectivityError.errorMessage = '';
       }
       if (ele) {
@@ -528,15 +533,24 @@ export default {
   right:0px;
 }
 
-.connectivity-list :deep(.connectivity-error-container.el-popover) {
+.connectivity-list :deep(.connectivity-error-container.el-popover),
+.connectivity-list :deep(.connectivity-warning-container.el-popover) {
   min-height: 31px; // placeholder
   align-items: center;
   justify-content: center;
   padding: 0.25rem 0.5rem;
-  background-color: var(--el-color-warning-light-9);
   border-radius: var(--el-border-radius-small);
-  border: 1px solid var(--el-color-warning);
   pointer-events: none;
   word-break: break-word;
+}
+
+.connectivity-list :deep(.connectivity-error-container.el-popover) {
+  background-color: var(--el-color-error-light-9);
+  border: 1px solid var(--el-color-error);
+}
+
+.connectivity-list :deep(.connectivity-warning-container.el-popover) {
+  background-color: var(--el-color-warning-light-9);
+  border: 1px solid var(--el-color-warning);
 }
 </style>
