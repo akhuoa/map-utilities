@@ -327,35 +327,31 @@ export default {
       return capitalise(text)
     },
     onConnectivityHovered: function (combination, ele) {
+      // reset
+      this.connectivityError.hasError = false;
+      this.connectivityError.errorType = '';
+      this.connectivityError.errorMessage = '';
+
       if (combination) {
-        if (!combination.mapId && combination.sckanId) {
+        if (!combination.mapId.length && combination.sckanId.length) {
           this.connectivityError.hasError = true;
           this.connectivityError.errorType = 'error';
           this.connectivityError.errorMessage =
             `<strong>${combination.sckanLabel}</strong> from the SCKAN is not available on the Map.`;
-        } else if (combination.mapId) {
+        } else if (combination.mapId.length) {
+          const hoveredLabel = combination.mapLabel.toLowerCase();
+          this.$emit('connectivity-hovered', hoveredLabel);
+
           if (JSON.stringify(combination.sckanId) !== JSON.stringify(combination.mapId)) {
             this.connectivityError.hasError = true;
             this.connectivityError.errorType = 'warning';
             this.connectivityError.errorMessage =
               `<strong>${combination.sckanLabel}</strong> from the SCKAN
               has been mapped to <strong>${combination.mapLabel}</strong> on the Map.`;
-          } else {
-            this.connectivityError.hasError = false;
-            this.connectivityError.errorType = '';
-            this.connectivityError.errorMessage = '';
-            this.$emit('connectivity-hovered', combination.mapLabel);
           }
-        } else {
-          this.connectivityError.hasError = false;
-          this.connectivityError.errorType = '';
-          this.connectivityError.errorMessage = '';
         }
-      } else {
-        this.connectivityError.hasError = false;
-        this.connectivityError.errorType = '';
-        this.connectivityError.errorMessage = '';
       }
+
       if (ele) {
         this.alertTop = ele.srcElement.offsetParent.offsetTop + ele.srcElement.offsetTop;
       }
