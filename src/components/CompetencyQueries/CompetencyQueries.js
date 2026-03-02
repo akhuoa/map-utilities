@@ -1,3 +1,5 @@
+import { s } from "vite/dist/node/types.d-aGj9QkWt";
+
 /**
  * @private
  * Competency Queries
@@ -29,45 +31,51 @@ async function _postRequest(API_URL, payload) {
 }
 
 /**
- * CQ query 27 [temp]: Single Connectivity List
- * @param {*} mapuuid
+ * CQ query 27: Single Connectivity List
+ * @param {*} flatmapAPI
+ * @param {*} knowledgeSource mapuuid
  * @param {*} pathId
  * @returns combined connectivity list
  */
-async function querySingleConnectivityList (mapuuid, pathId) {
-  const API_URL = 'http://localhost:9000/27'; // TODO: to update to the actual endpoint when ready
-  const payload = {
-    "query_id": "27",
-    "parameters": [
+async function querySingleConnectivityList (flatmapAPI, knowledgeSource, pathId) {
+  const data = competencyQuery({
+    flatmapAPI: flatmapAPI,
+    knowledgeSource: knowledgeSource,
+    queryId: 27,
+    parameters: [
       {
-        "column": "source_id",
-        "value": [mapuuid]
+        column: 'path_id',
+        value: pathId
       },
-      {
-        "column": "path_id",
-        "value": [pathId]
-      }
     ]
-  };
+  });
 
-  try {
-    const response = await fetch(API_URL, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify(payload),
+  if (data?.results?.values) {
+    const connectivityList = data.results.values.map((value) => {
+      // value => [
+      // "sckan_id",
+      // "path_id",
+      // "sckan_node_id",
+      // "sckan_node_label",
+      // "source_id", // mapuuid
+      // "node_id", // map node id
+      // "node_label" // map node label
+      // ]
+      return {
+        sckanId: value[0],
+        mapUUID: value[4],
+        pathId: value[1],
+        sckanNodeId: value[2] || "[]",
+        sckanNodeLabel: value[3] || "",
+        mapNodeId: value[5] || "[]",
+        mapNodeLabel: value[6] || "",
+      };
     });
-
-    if (!response.ok) {
-      throw new Error(`API Error: ${response.status} ${response.statusText}`);
-    }
-
-    return await response.json();
-  } catch (error) {
-    console.error("Request failed:", error);
-    throw error;
+    // remove duplicates
+    return [...new Set(connectivityList)];
   }
+
+  return [];
 }
 
 /**
