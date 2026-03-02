@@ -38,7 +38,7 @@ async function _postRequest(API_URL, payload) {
  * @returns combined connectivity list
  */
 async function querySingleConnectivityList(flatmapAPI, knowledgeSource, pathId) {
-  const data = competencyQuery({
+  const data = await competencyQuery({
     flatmapAPI: flatmapAPI,
     knowledgeSource: knowledgeSource,
     queryId: 27,
