@@ -1,4 +1,4 @@
-import { s } from "vite/dist/node/types.d-aGj9QkWt";
+import { removeDuplicates } from '../utilities';
 
 /**
  * @private
@@ -72,7 +72,7 @@ async function querySingleConnectivityList (flatmapAPI, knowledgeSource, pathId)
       };
     });
     // remove duplicates
-    return [...new Set(connectivityList)];
+    return removeDuplicates(connectivityList);
   }
 
   return [];
