@@ -65,9 +65,9 @@ async function querySingleConnectivityList(flatmapAPI, knowledgeSource, pathId) 
         sckanId: value[0],
         mapUUID: value[4],
         pathId: value[1],
-        sckanNodeId: value[2] || "[]",
+        sckanNodeId: value[2] ? JSON.parse(value[2]) : [],
         sckanNodeLabel: value[3] || "",
-        mapNodeId: value[5] || "[]",
+        mapNodeId: value[5] ? JSON.parse(value[5]) : [],
         mapNodeLabel: value[6] || "",
       };
     });
