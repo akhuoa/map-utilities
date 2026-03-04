@@ -63,11 +63,11 @@
           </template>
           <span>Search connectivity</span>
         </el-popover>
-        <span v-if="origin.sckanLabel.toLowerCase() !== origin.mapLabel.toLowerCase()">
-          <s>{{ capitalise(origin.sckanLabel) }}</s>
-          <span v-if="origin.mapLabel"> / </span>
-        </span>
         <span>{{ capitalise(origin.mapLabel) }}</span>
+        <span v-if="origin.sckanLabel.toLowerCase() !== origin.mapLabel.toLowerCase()">
+          <span v-if="origin.mapLabel"> / </span>
+          <s>{{ capitalise(origin.sckanLabel) }}</s>
+        </span>
       </div>
       <el-button
         v-show="
@@ -115,11 +115,11 @@
           </template>
           <span>Search connectivity</span>
         </el-popover>
-        <span v-if="component.sckanLabel.toLowerCase() !== component.mapLabel.toLowerCase()">
-          <s>{{ capitalise(component.sckanLabel) }}</s>
-          <span v-if="component.mapLabel"> / </span>
-        </span>
         <span>{{ capitalise(component.mapLabel) }}</span>
+        <span v-if="component.sckanLabel.toLowerCase() !== component.mapLabel.toLowerCase()">
+          <span v-if="component.mapLabel"> / </span>
+          <s>{{ capitalise(component.sckanLabel) }}</s>
+        </span>
       </div>
     </div>
 
@@ -169,11 +169,11 @@
           </template>
           <span>Search connectivity</span>
         </el-popover>
-        <span v-if="destination.sckanLabel.toLowerCase() !== destination.mapLabel.toLowerCase()">
-          <s>{{ capitalise(destination.sckanLabel) }}</s>
-          <span v-if="destination.mapLabel"> / </span>
-        </span>
         <span>{{ capitalise(destination.mapLabel) }}</span>
+        <span v-if="destination.sckanLabel.toLowerCase() !== destination.mapLabel.toLowerCase()">
+          <span v-if="destination.mapLabel"> / </span>
+          <s>{{ capitalise(destination.sckanLabel) }}</s>
+        </span>
       </div>
       <el-button
         v-show="
