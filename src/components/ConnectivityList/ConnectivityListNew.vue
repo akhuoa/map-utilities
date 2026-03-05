@@ -346,12 +346,10 @@ export default {
 
         const item = mapIdToItem.get(mapIdKey)
 
-        // Collect SCKAN labels that are different from the map label
-        if (combo.sckanLabel.toLowerCase() !== combo.mapLabel.toLowerCase()) {
-          // Avoid duplicates in mappedSckanLabels
-          if (!item.mappedSckanLabels.includes(combo.sckanLabel)) {
-            item.mappedSckanLabels.push(combo.sckanLabel)
-          }
+        // Collect all SCKAN labels mapped to this map item
+        // Avoid duplicates in mappedSckanLabels
+        if (!item.mappedSckanLabels.includes(combo.sckanLabel)) {
+          item.mappedSckanLabels.push(combo.sckanLabel)
         }
       })
 
@@ -376,7 +374,7 @@ export default {
           // If there are mapped SCKAN labels, show them in a list
           if (combination.mappedSckanLabels && combination.mappedSckanLabels.length > 0) {
             const sckanList = combination.mappedSckanLabels
-              .map(label => `<li><strong>${label}</strong></li>`)
+              .map(label => `<li>${label}</li>`)
               .join('');
             const messageHead = `Mapped from these SCKAN entries:`;
             const messageBody = `<ul style="margin: 0.5em 0; padding-left: 1.5em;">${sckanList}</ul>`;
