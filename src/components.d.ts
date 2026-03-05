@@ -10,6 +10,7 @@ declare module 'vue' {
     AnnotationPopup: typeof import('./components/Tooltip/AnnotationPopup.vue')['default']
     ConnectionDialog: typeof import('./components/DrawToolbar/ConnectionDialog.vue')['default']
     ConnectivityGraph: typeof import('./components/ConnectivityGraph/ConnectivityGraph.vue')['default']
+    ConnectivityGraphNew: typeof import('./components/ConnectivityGraph/ConnectivityGraphNew.vue')['default']
     ConnectivityList: typeof import('./components/ConnectivityList/ConnectivityList.vue')['default']
     ConnectivityListNew: typeof import('./components/ConnectivityList/ConnectivityListNew.vue')['default']
     CopyToClipboard: typeof import('./components/CopyToClipboard/CopyToClipboard.vue')['default']
