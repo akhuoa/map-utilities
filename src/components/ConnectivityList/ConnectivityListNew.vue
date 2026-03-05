@@ -405,7 +405,7 @@ export default {
               .map(label => `<li>${label}</li>`)
               .join('');
             const messageHead = `<em>Mapped from these SCKAN entries:</em>`;
-            const messageBody = `<ul style="margin: 0.5em 0; padding-left: 1.5em;">${sckanList}</ul>`;
+            const messageBody = `<ul>${sckanList}</ul>`;
             newError = {
               hasError: true,
               errorType: 'warning',
@@ -635,6 +635,17 @@ export default {
   border-radius: var(--el-border-radius-small);
   pointer-events: none;
   word-break: break-word;
+}
+
+.connectivity-list :deep(.connectivity-error-container.el-popover ul),
+.connectivity-list :deep(.connectivity-warning-container.el-popover ul) {
+  margin: 0.5em 0 0;
+  padding-left: 1.25em;
+}
+
+.connectivity-list :deep(.connectivity-error-container.el-popover li + li),
+.connectivity-list :deep(.connectivity-warning-container.el-popover li + li) {
+  margin-top: 0.25em;
 }
 
 .connectivity-list :deep(.connectivity-error-container.el-popover) {
