@@ -6,13 +6,13 @@
       :show-arrow="false"
       trigger="manual"
       :teleported="false"
-      placement="left-start"
+      placement="bottom-start"
       :visible="connectivityError.hasError && !!connectivityError.errorMessage"
       :popper-class="connectivityError.errorType === 'warning' ? 'connectivity-warning-container' : 'connectivity-error-container'"
     >
       <template #reference>
         <div class="connectivity-alert"
-          :style="{ top: alertTop + 'px' }">
+          :style="{ top: alertTop + 'px', left: alertLeft + 'px' }">
         </div>
       </template>
       <template #default>
@@ -293,6 +293,7 @@ export default {
   data: function () {
     return {
       alertTop: 0,
+      alertLeft: 0,
       originDescriptions: {
         motor: 'is the location of the initial cell body of the circuit',
         sensory: 'is the location of the initial cell body in the PNS circuit',
@@ -383,7 +384,7 @@ export default {
       // Return mapped items followed by unmapped items
       return [...Array.from(mapIdToItem.values()), ...unmappedItems]
     },
-    onConnectivityHovered: function (combination, ele) {
+    onConnectivityHovered: function (combination, event) {
       if (this.clearErrorTimeout) {
         clearTimeout(this.clearErrorTimeout);
         this.clearErrorTimeout = null;
@@ -449,8 +450,13 @@ export default {
         }, 350);
       }
 
-      if (ele) {
-        this.alertTop = ele.srcElement.offsetParent.offsetTop + ele.srcElement.offsetTop;
+      if (event) {
+        const element = event.srcElement || event.target;
+        const rect = element.getBoundingClientRect();
+        const x = event.clientX - rect.left; // use mouse position relative to the element
+
+        this.alertTop = element.offsetParent.offsetTop + element.offsetTop;
+        this.alertLeft = x;
       }
     },
     onConnectivityClicked: function (name) {
@@ -623,7 +629,7 @@ export default {
 .connectivity-alert {
   position: absolute;
   width: 1px;
-  right:0px;
+  height: 1px;
 }
 
 .connectivity-list :deep(.connectivity-error-container.el-popover),
