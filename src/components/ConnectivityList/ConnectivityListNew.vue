@@ -378,7 +378,7 @@ export default {
             const sckanList = combination.mappedSckanLabels
               .map(label => `<li><strong>${label}</strong></li>`)
               .join('');
-            const messageHead = `<strong>${combination.mapLabel}</strong> is derived from these SCKAN entries:`;
+            const messageHead = `Mapped from these SCKAN entries:`;
             const messageBody = `<ul style="margin: 0.5em 0; padding-left: 1.5em;">${sckanList}</ul>`;
             newError = {
               hasError: true,
