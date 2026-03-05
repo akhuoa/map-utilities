@@ -39,10 +39,10 @@
         </el-popover>
       </div>
       <div
-        v-for="(origin, i) in originsCombinations"
+        v-for="(origin, i) in processedOriginsCombinations"
         class="attribute-content"
         :origin-item-label="origin.mapLabel"
-        :key="origin.sckanLabel"
+        :key="origin.mapLabel + '-' + i"
         @mouseenter="onConnectivityHovered(origin, $event)"
         @mouseleave="onConnectivityHovered()"
       >
@@ -64,10 +64,6 @@
           <span>Search connectivity</span>
         </el-popover>
         <span>{{ capitalise(origin.mapLabel) }}</span>
-        <span v-if="origin.sckanLabel.toLowerCase() !== origin.mapLabel.toLowerCase()">
-          <span v-if="origin.mapLabel"> / </span>
-          <s>{{ capitalise(origin.sckanLabel) }}</s>
-        </span>
       </div>
       <el-button
         v-show="
@@ -91,10 +87,10 @@
         <span class="attribute-title">Components</span>
       </div>
       <div
-        v-for="(component, i) in componentsCombinations"
+        v-for="(component, i) in processedComponentsCombinations"
         class="attribute-content"
         :component-item-label="component.mapLabel"
-        :key="component.sckanLabel"
+        :key="component.mapLabel + '-' + i"
         @mouseenter="onConnectivityHovered(component, $event)"
         @mouseleave="onConnectivityHovered()"
       >
@@ -116,10 +112,6 @@
           <span>Search connectivity</span>
         </el-popover>
         <span>{{ capitalise(component.mapLabel) }}</span>
-        <span v-if="component.sckanLabel.toLowerCase() !== component.mapLabel.toLowerCase()">
-          <span v-if="component.mapLabel"> / </span>
-          <s>{{ capitalise(component.sckanLabel) }}</s>
-        </span>
       </div>
     </div>
 
@@ -145,10 +137,10 @@
         </el-popover>
       </div>
       <div
-        v-for="(destination, i) in destinationsCombinations"
+        v-for="(destination, i) in processedDestinationsCombinations"
         class="attribute-content"
         :destination-item-label="destination.mapLabel"
-        :key="destination.sckanLabel"
+        :key="destination.mapLabel + '-' + i"
         @mouseenter="onConnectivityHovered(destination, $event)"
         @mouseleave="onConnectivityHovered()"
       >
@@ -170,10 +162,6 @@
           <span>Search connectivity</span>
         </el-popover>
         <span>{{ capitalise(destination.mapLabel) }}</span>
-        <span v-if="destination.sckanLabel.toLowerCase() !== destination.mapLabel.toLowerCase()">
-          <span v-if="destination.mapLabel"> / </span>
-          <s>{{ capitalise(destination.sckanLabel) }}</s>
-        </span>
       </div>
       <el-button
         v-show="
@@ -322,10 +310,52 @@ export default {
         return this.originDescriptions.sensory
       }
     },
+    // Deduplicate origins by mapId and collect mapped SCKAN labels
+    processedOriginsCombinations: function () {
+      return this.processCombinations(this.originsCombinations)
+    },
+    // Deduplicate destinations by mapId and collect mapped SCKAN labels
+    processedDestinationsCombinations: function () {
+      return this.processCombinations(this.destinationsCombinations)
+    },
+    // Deduplicate components by mapId and collect mapped SCKAN labels
+    processedComponentsCombinations: function () {
+      return this.processCombinations(this.componentsCombinations)
+    },
   },
   methods: {
     capitalise: function (text) {
       return capitalise(text)
+    },
+    // Process combinations to deduplicate by mapId and collect mapped SCKAN labels
+    processCombinations: function (combinations) {
+      const mapIdToItem = new Map()
+
+      combinations.forEach((combo) => {
+        const mapIdKey = JSON.stringify(combo.mapId)
+
+        if (!mapIdToItem.has(mapIdKey)) {
+          mapIdToItem.set(mapIdKey, {
+            mapId: combo.mapId,
+            mapLabel: combo.mapLabel,
+            sckanLabel: combo.sckanLabel,
+            sckanId: combo.sckanId,
+            mappedSckanLabels: [],
+          })
+        }
+
+        const item = mapIdToItem.get(mapIdKey)
+
+        // Collect SCKAN labels that are different from the map label
+        if (combo.sckanLabel.toLowerCase() !== combo.mapLabel.toLowerCase()) {
+          // Avoid duplicates in mappedSckanLabels
+          if (!item.mappedSckanLabels.includes(combo.sckanLabel)) {
+            item.mappedSckanLabels.push(combo.sckanLabel)
+          }
+        }
+      })
+
+      return Array.from(mapIdToItem.values())
     },
     onConnectivityHovered: function (combination, ele) {
       if (this.clearErrorTimeout) {
@@ -343,8 +373,21 @@ export default {
           const hoveredLabel = combination.mapLabel.toLowerCase();
           this.$emit('connectivity-hovered', hoveredLabel);
 
+          // If there are mapped SCKAN labels, show them in a list
+          if (combination.mappedSckanLabels && combination.mappedSckanLabels.length > 0) {
+            const sckanList = combination.mappedSckanLabels
+              .map(label => `<li><strong>${label}</strong></li>`)
+              .join('');
+            const messageHead = `<strong>${combination.mapLabel}</strong> is derived from these SCKAN entries:`;
+            const messageBody = `<ul style="margin: 0.5em 0; padding-left: 1.5em;">${sckanList}</ul>`;
+            newError = {
+              hasError: true,
+              errorType: 'warning',
+              errorMessage: `${messageHead}${messageBody}`,
+            };
+          }
           // If the SCKAN term and the Map term are different, show warning message.
-          if (JSON.stringify(combination.sckanId) !== JSON.stringify(combination.mapId)) {
+          else if (JSON.stringify(combination.sckanId) !== JSON.stringify(combination.mapId)) {
             newError = {
               hasError: true,
               errorType: 'warning',
