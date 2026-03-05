@@ -64,6 +64,10 @@
           <span>Search connectivity</span>
         </el-popover>
         <span>{{ capitalise(origin.mapLabel) }}</span>
+        <span v-if="origin.isUnmapped">
+          <span v-if="origin.mapLabel"> / </span>
+          <s>{{ capitalise(origin.sckanLabel) }}</s>
+        </span>
       </div>
       <el-button
         v-show="
@@ -112,6 +116,10 @@
           <span>Search connectivity</span>
         </el-popover>
         <span>{{ capitalise(component.mapLabel) }}</span>
+        <span v-if="component.isUnmapped">
+          <span v-if="component.mapLabel"> / </span>
+          <s>{{ capitalise(component.sckanLabel) }}</s>
+        </span>
       </div>
     </div>
 
@@ -162,6 +170,10 @@
           <span>Search connectivity</span>
         </el-popover>
         <span>{{ capitalise(destination.mapLabel) }}</span>
+        <span v-if="destination.isUnmapped">
+          <span v-if="destination.mapLabel"> / </span>
+          <s>{{ capitalise(destination.sckanLabel) }}</s>
+        </span>
       </div>
       <el-button
         v-show="
@@ -330,8 +342,22 @@ export default {
     // Process combinations to deduplicate by mapId and collect mapped SCKAN labels
     processCombinations: function (combinations) {
       const mapIdToItem = new Map()
+      const unmappedItems = []
 
       combinations.forEach((combo) => {
+        // Items without mapId are considered unmapped (not available on map)
+        if (!combo.mapId || combo.mapId.length === 0) {
+          unmappedItems.push({
+            mapId: combo.mapId,
+            mapLabel: combo.mapLabel,
+            sckanLabel: combo.sckanLabel,
+            sckanId: combo.sckanId,
+            mappedSckanLabels: [],
+            isUnmapped: true,
+          })
+          return
+        }
+
         const mapIdKey = JSON.stringify(combo.mapId)
 
         if (!mapIdToItem.has(mapIdKey)) {
@@ -341,6 +367,7 @@ export default {
             sckanLabel: combo.sckanLabel,
             sckanId: combo.sckanId,
             mappedSckanLabels: [],
+            isUnmapped: false,
           })
         }
 
@@ -353,7 +380,8 @@ export default {
         }
       })
 
-      return Array.from(mapIdToItem.values())
+      // Return mapped items followed by unmapped items
+      return [...Array.from(mapIdToItem.values()), ...unmappedItems]
     },
     onConnectivityHovered: function (combination, ele) {
       if (this.clearErrorTimeout) {
@@ -376,7 +404,7 @@ export default {
             const sckanList = combination.mappedSckanLabels
               .map(label => `<li>${label}</li>`)
               .join('');
-            const messageHead = `Mapped from these SCKAN entries:`;
+            const messageHead = `<em>Mapped from these SCKAN entries:</em>`;
             const messageBody = `<ul style="margin: 0.5em 0; padding-left: 1.5em;">${sckanList}</ul>`;
             newError = {
               hasError: true,
