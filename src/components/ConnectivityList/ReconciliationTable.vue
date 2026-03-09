@@ -25,7 +25,7 @@
 						<td
 							v-if="i === 0"
 							class="table-cell target-column"
-							:class="{ 'grouped-cell': group.items.length > 1 }"
+							:class="{ 'grouped-cell': group.items.length > 1, 'unavailable': !item.mapId || item.mapId.length === 0 }"
 							:rowspan="group.items.length"
 						>
               <div class="target-content">
@@ -155,6 +155,7 @@ export default {
 		}
 	}
 
+  &.target-column.unavailable,
 	&.source-column {
 		&::before {
 			background-color: #ffebe9;
@@ -167,7 +168,7 @@ export default {
 		}
 	}
 
-	&.target-column {
+	&.target-column:not(.unavailable) {
 		&::before {
 			background-color: #e6ffed;
 			border-left: 4px solid #aceebb;
