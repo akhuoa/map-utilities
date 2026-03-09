@@ -70,7 +70,7 @@
                   :rowspan="group.items.length"
                 >
                   <div v-if="origin.mapId && origin.mapId.length > 0" class="target-content">
-                    <el-popover
+                    <!-- <el-popover
                       width="150"
                       trigger="hover"
                       :teleported="false"
@@ -85,7 +85,7 @@
                         </el-icon>
                       </template>
                       <span>Search connectivity</span>
-                    </el-popover>
+                    </el-popover> -->
                     <span class="term-label">{{ capitalise(origin.mapLabel) }}</span>
                   </div>
                   <span v-else class="no-mapping">—</span>
@@ -95,13 +95,23 @@
                   :class="{ 'grouped-cell': group.items.length > 1 }"
                   :rowspan="group.items.length"
                 >
-                  <el-icon
+                  <el-popover
                     v-if="origin.mapId && origin.mapId.length > 0"
-                    class="status-icon mapped"
-                    title="Mapped"
+                    width="150"
+                    trigger="hover"
+                    :teleported="false"
+                    popper-class="popover-origin-help"
                   >
-                    <el-icon-check />
-                  </el-icon>
+                    <template #reference>
+                      <el-icon
+                        class="status-search-icon"
+                        @click="onConnectivityClicked(origin.mapLabel)"
+                      >
+                        <el-icon-search />
+                      </el-icon>
+                    </template>
+                    <span>Search connectivity</span>
+                  </el-popover>
                   <el-icon
                     v-else
                     class="status-icon unmapped"
@@ -169,7 +179,7 @@
                   :rowspan="group.items.length"
                 >
                   <div v-if="component.mapId && component.mapId.length > 0" class="target-content">
-                    <el-popover
+                    <!-- <el-popover
                       width="150"
                       trigger="hover"
                       :teleported="false"
@@ -184,7 +194,7 @@
                         </el-icon>
                       </template>
                       <span>Search connectivity</span>
-                    </el-popover>
+                    </el-popover> -->
                     <span class="term-label">{{ capitalise(component.mapLabel) }}</span>
                   </div>
                   <span v-else class="no-mapping">—</span>
@@ -194,13 +204,23 @@
                   :class="{ 'grouped-cell': group.items.length > 1 }"
                   :rowspan="group.items.length"
                 >
-                  <el-icon
+                  <el-popover
                     v-if="component.mapId && component.mapId.length > 0"
-                    class="status-icon mapped"
-                    title="Mapped"
+                    width="150"
+                    trigger="hover"
+                    :teleported="false"
+                    popper-class="popover-origin-help"
                   >
-                    <el-icon-check />
-                  </el-icon>
+                    <template #reference>
+                      <el-icon
+                        class="status-search-icon"
+                        @click="onConnectivityClicked(component.mapLabel)"
+                      >
+                        <el-icon-search />
+                      </el-icon>
+                    </template>
+                    <span>Search connectivity</span>
+                  </el-popover>
                   <el-icon
                     v-else
                     class="status-icon unmapped"
@@ -269,7 +289,7 @@
                   :rowspan="group.items.length"
                 >
                   <div v-if="destination.mapId && destination.mapId.length > 0" class="target-content">
-                    <el-popover
+                    <!-- <el-popover
                       width="150"
                       trigger="hover"
                       :teleported="false"
@@ -284,7 +304,7 @@
                         </el-icon>
                       </template>
                       <span>Search connectivity</span>
-                    </el-popover>
+                    </el-popover> -->
                     <span class="term-label">{{ capitalise(destination.mapLabel) }}</span>
                   </div>
                   <span v-else class="no-mapping">—</span>
@@ -294,13 +314,23 @@
                   :class="{ 'grouped-cell': group.items.length > 1 }"
                   :rowspan="group.items.length"
                 >
-                  <el-icon
+                  <el-popover
                     v-if="destination.mapId && destination.mapId.length > 0"
-                    class="status-icon mapped"
-                    title="Mapped"
+                    width="150"
+                    trigger="hover"
+                    :teleported="false"
+                    popper-class="popover-origin-help"
                   >
-                    <el-icon-check />
-                  </el-icon>
+                    <template #reference>
+                      <el-icon
+                        class="status-search-icon"
+                        @click="onConnectivityClicked(destination.mapLabel)"
+                      >
+                        <el-icon-search />
+                      </el-icon>
+                    </template>
+                    <span>Search connectivity</span>
+                  </el-popover>
                   <el-icon
                     v-else
                     class="status-icon unmapped"
@@ -351,7 +381,6 @@
 import {
   Warning as ElIconWarning,
   Search as ElIconSearch,
-  Check as ElIconCheck,
   Close as ElIconClose,
 } from '@element-plus/icons-vue'
 import {
@@ -369,7 +398,6 @@ export default {
     Icon,
     ElIconWarning,
     ElIconSearch,
-    ElIconCheck,
     ElIconClose,
   },
   props: {
@@ -796,6 +824,16 @@ export default {
 
   &.unmapped {
     color: var(--el-color-error);
+  }
+}
+
+.status-search-icon {
+  font-size: 16px;
+  color: $app-primary-color;
+  cursor: pointer;
+
+  &:hover {
+    color: #ac76c5;
   }
 }
 
