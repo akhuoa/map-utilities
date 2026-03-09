@@ -17,6 +17,7 @@
 					>
 						<td
 							class="table-cell source-column"
+							:class="{ 'direct-match': isDirectMatch(group, item) }"
 							@mouseenter="$emit('row-hovered', item, $event)"
 							@mouseleave="$emit('row-hovered')"
 						>
@@ -25,7 +26,11 @@
 						<td
 							v-if="i === 0"
 							class="table-cell target-column"
-							:class="{ 'grouped-cell': group.items.length > 1, 'unavailable': !item.mapId || item.mapId.length === 0 }"
+							:class="{
+								'grouped-cell': group.items.length > 1,
+								'unavailable': !item.mapId || item.mapId.length === 0,
+								'direct-match': isDirectMatch(group, item)
+							}"
 							:rowspan="group.items.length"
 						>
               <div class="target-content">
@@ -92,6 +97,14 @@ export default {
 		capitalise: function (text) {
 			return capitalise(text)
 		},
+		isDirectMatch: function (group, item) {
+			// Direct match only when:
+			// 1. Single item (not grouped)
+			// 2. Both IDs exist and match exactly
+			if (group.items.length !== 1) return false
+			if (!item.sckanId || !item.mapId) return false
+			return JSON.stringify(item.sckanId) === JSON.stringify(item.mapId)
+		},
 	},
 }
 </script>
@@ -155,8 +168,23 @@ export default {
 		}
 	}
 
+	// Direct match styling (one-to-one exact match)
+	&.source-column.direct-match,
+	&.target-column.direct-match {
+		&::before {
+			background-color: #e3f2fd;
+			border-left: 4px solid #90caf9;
+		}
+
+		&:hover::before {
+			background-color: #bbdefb;
+			border-left-color: #64b5f6;
+		}
+	}
+
+	// Non-matching or grouped cases
   &.target-column.unavailable,
-	&.source-column {
+	&.source-column:not(.direct-match) {
 		&::before {
 			background-color: #ffebe9;
 			border-left: 4px solid #ffcecb;
@@ -168,7 +196,7 @@ export default {
 		}
 	}
 
-	&.target-column:not(.unavailable) {
+	&.target-column:not(.unavailable):not(.direct-match) {
 		&::before {
 			background-color: #e6ffed;
 			border-left: 4px solid #aceebb;
