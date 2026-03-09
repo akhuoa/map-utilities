@@ -5,7 +5,6 @@
 				<tr>
 					<th class="source-column">SCKAN Term</th>
 					<th class="target-column">Map Term</th>
-					<th class="status-column">Status</th>
 				</tr>
 			</thead>
 			<tbody>
@@ -29,41 +28,34 @@
 							:class="{ 'grouped-cell': group.items.length > 1 }"
 							:rowspan="group.items.length"
 						>
-							<div v-if="item.mapId && item.mapId.length > 0" class="target-content">
-								<span class="term-label">{{ capitalise(item.mapLabel) }}</span>
-							</div>
-							<span v-else class="no-mapping">—</span>
-						</td>
-						<td
-							v-if="i === 0"
-							class="table-cell status-column"
-							:class="{ 'grouped-cell': group.items.length > 1 }"
-							:rowspan="group.items.length"
-						>
-							<el-popover
-								v-if="item.mapId && item.mapId.length > 0"
-								width="150"
-								trigger="hover"
-								:teleported="false"
-								popper-class="popover-origin-help"
-							>
-								<template #reference>
-									<el-icon
-										class="status-search-icon"
-										@click="$emit('connectivity-clicked', item.mapLabel)"
-									>
-										<el-icon-search />
-									</el-icon>
-								</template>
-								<span>Search connectivity</span>
-							</el-popover>
-							<el-icon
-								v-else
-								class="status-icon unmapped"
-								title="Not available on map"
-							>
-								<el-icon-close />
-							</el-icon>
+              <div class="target-content">
+                <template v-if="item.mapId && item.mapId.length > 0">
+                  <span class="term-label">{{ capitalise(item.mapLabel) }}</span>
+                  <el-popover
+                    width="150"
+                    trigger="hover"
+                    :teleported="false"
+                    popper-class="popover-origin-help"
+                  >
+                    <template #reference>
+                      <el-icon
+                        class="status-search-icon"
+                        @click="$emit('connectivity-clicked', item.mapLabel)"
+                      >
+                        <el-icon-search />
+                      </el-icon>
+                    </template>
+                    <span>Search connectivity</span>
+                  </el-popover>
+                </template>
+                <el-icon
+                  v-else
+                  class="status-icon unmapped"
+                  title="Not available on map"
+                >
+                  <el-icon-close />
+                </el-icon>
+              </div>
 						</td>
 					</tr>
 				</template>
@@ -141,19 +133,10 @@ export default {
 		text-align: left;
 	}
 
-	.source-column {
-		width: 45%;
-		text-align: left;
-	}
-
+  .source-column,
 	.target-column {
-		width: 45%;
+		width: 50%;
 		text-align: left;
-	}
-
-	.status-column {
-		width: 10%;
-		text-align: center;
 	}
 }
 
@@ -199,10 +182,6 @@ export default {
 	&.grouped-cell {
 		vertical-align: middle;
 	}
-
-	&.status-column {
-		text-align: center;
-	}
 }
 
 .term-label {
@@ -213,8 +192,10 @@ export default {
 }
 
 .target-content {
+  width: 100%;
 	display: flex;
 	align-items: center;
+  justify-content: space-between;
 	gap: 0.5rem;
 	position: relative;
 }
@@ -235,14 +216,15 @@ export default {
 	font-size: 16px;
 	color: $app-primary-color;
 	cursor: pointer;
+  opacity: 0;
+  transition: opacity 0.2s ease;
 
 	&:hover {
 		color: #ac76c5;
 	}
 }
 
-.no-mapping {
-	color: var(--el-text-color-placeholder);
-	font-style: italic;
+.table-row:hover .status-search-icon {
+  opacity: 1;
 }
 </style>
