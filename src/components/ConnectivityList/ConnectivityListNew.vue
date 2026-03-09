@@ -792,8 +792,15 @@ export default {
 .table-cell {
   background-color: var(--el-fill-color-blank);
 
+  &.source-column {
+    background-color: #ffebe9;
+  }
+
+  &.target-column {
+    background-color: #e6ffed;
+  }
+
   &.grouped-cell {
-    background-color: var(--el-fill-color-lighter);
     vertical-align: middle;
   }
 
