@@ -15,53 +15,84 @@
 						class="table-row"
 						:class="{ 'group-last': i === group.items.length - 1 }"
 					>
-						<td
-							class="table-cell source-column"
-							:class="{ 'direct-match': isDirectMatch(group, item) }"
-							@mouseenter="$emit('row-hovered', item, $event)"
-							@mouseleave="$emit('row-hovered')"
-						>
-							<span class="term-label">{{ capitalise(item.sckanLabel) }}</span>
-						</td>
-						<td
-							v-if="i === 0"
-							class="table-cell target-column"
-							:class="{
-								'grouped-cell': group.items.length > 1,
-								'unavailable': !item.mapId || item.mapId.length === 0,
-								'direct-match': isDirectMatch(group, item)
-							}"
-							:rowspan="group.items.length"
-						>
-              <div class="target-content">
-                <template v-if="item.mapId && item.mapId.length > 0">
-                  <span class="term-label">{{ capitalise(item.mapLabel) }}</span>
-                  <el-popover
-                    width="150"
-                    trigger="hover"
-                    :teleported="false"
-                    popper-class="popover-origin-help"
-                  >
-                    <template #reference>
-                      <el-icon
-                        class="status-search-icon"
-                        @click="$emit('connectivity-clicked', item.mapLabel)"
-                      >
-                        <el-icon-search />
-                      </el-icon>
-                    </template>
-                    <span>Search connectivity</span>
-                  </el-popover>
-                </template>
-                <el-icon
-                  v-else
-                  class="status-icon unmapped"
-                  title="Not available on map"
-                >
-                  <el-icon-close />
-                </el-icon>
-              </div>
-						</td>
+						<!-- Direct match: single merged cell -->
+						<template v-if="isDirectMatch(group, item)">
+							<td
+								class="table-cell direct-match-cell"
+								colspan="2"
+								@mouseenter="$emit('row-hovered', item, $event)"
+								@mouseleave="$emit('row-hovered')"
+							>
+								<div class="target-content">
+									<span class="term-label">{{ capitalise(item.sckanLabel) }}</span>
+									<el-popover
+										width="150"
+										trigger="hover"
+										:teleported="false"
+										popper-class="popover-origin-help"
+									>
+										<template #reference>
+											<el-icon
+												class="status-search-icon"
+												@click="$emit('connectivity-clicked', item.mapLabel)"
+											>
+												<el-icon-search />
+											</el-icon>
+										</template>
+										<span>Search connectivity</span>
+									</el-popover>
+								</div>
+							</td>
+						</template>
+
+						<!-- Non-direct match: separate source and target columns -->
+						<template v-else>
+							<td
+								class="table-cell source-column"
+								@mouseenter="$emit('row-hovered', item, $event)"
+								@mouseleave="$emit('row-hovered')"
+							>
+								<span class="term-label">{{ capitalise(item.sckanLabel) }}</span>
+							</td>
+							<td
+								v-if="i === 0"
+								class="table-cell target-column"
+								:class="{
+									'grouped-cell': group.items.length > 1,
+									'unavailable': !item.mapId || item.mapId.length === 0
+								}"
+								:rowspan="group.items.length"
+							>
+								<div class="target-content">
+									<template v-if="item.mapId && item.mapId.length > 0">
+										<span class="term-label">{{ capitalise(item.mapLabel) }}</span>
+										<el-popover
+											width="150"
+											trigger="hover"
+											:teleported="false"
+											popper-class="popover-origin-help"
+										>
+											<template #reference>
+												<el-icon
+													class="status-search-icon"
+													@click="$emit('connectivity-clicked', item.mapLabel)"
+												>
+													<el-icon-search />
+												</el-icon>
+											</template>
+											<span>Search connectivity</span>
+										</el-popover>
+									</template>
+									<el-icon
+										v-else
+										class="status-icon unmapped"
+										title="Not available on map"
+									>
+										<el-icon-close />
+									</el-icon>
+								</div>
+							</td>
+						</template>
 					</tr>
 				</template>
 			</tbody>
@@ -157,7 +188,8 @@ export default {
 	background-color: #f7faff;
 
 	&.source-column,
-	&.target-column {
+	&.target-column,
+	&.direct-match-cell {
 		position: relative;
 
 		&::before {
@@ -168,9 +200,8 @@ export default {
 		}
 	}
 
-	// Direct match styling (one-to-one exact match)
-	&.source-column.direct-match,
-	&.target-column.direct-match {
+	// Direct match merged cell styling (one-to-one exact match)
+	&.direct-match-cell {
 		&::before {
 			background-color: #e3f2fd;
 			border-left: 4px solid #90caf9;
@@ -182,9 +213,8 @@ export default {
 		}
 	}
 
-	// Non-matching or grouped cases
-  &.target-column.unavailable,
-	&.source-column:not(.direct-match) {
+	// Source column (non-direct match cases)
+	&.source-column {
 		&::before {
 			background-color: #ffebe9;
 			border-left: 4px solid #ffcecb;
@@ -196,7 +226,21 @@ export default {
 		}
 	}
 
-	&.target-column:not(.unavailable):not(.direct-match) {
+	// Target column - unavailable items
+	&.target-column.unavailable {
+		&::before {
+			background-color: #ffebe9;
+			border-left: 4px solid #ffcecb;
+		}
+
+		&:hover::before {
+			background-color: #ffe5e3;
+			border-left-color: #ffb7b4;
+		}
+	}
+
+	// Target column - available but not direct match
+	&.target-column:not(.unavailable) {
 		&::before {
 			background-color: #e6ffed;
 			border-left: 4px solid #aceebb;
