@@ -49,8 +49,8 @@
 						<template v-else>
 							<td
 								class="table-cell source-column"
-								@mouseenter="$emit('row-hovered', item, $event)"
-								@mouseleave="$emit('row-hovered')"
+								@mouseenter="onSourceHover(groupIndex, item, $event)"
+								@mouseleave="onSourceLeave(item)"
 							>
 								<span class="term-label">{{ capitalise(item.sckanLabel) }}</span>
 							</td>
@@ -59,7 +59,8 @@
 								class="table-cell target-column"
 								:class="{
 									'grouped-cell': group.items.length > 1,
-									'unavailable': !item.mapId || item.mapId.length === 0
+									'unavailable': !item.mapId || item.mapId.length === 0,
+									'highlighted': hoveredGroupIndex === groupIndex
 								}"
 								:rowspan="group.items.length"
 							>
@@ -124,6 +125,11 @@ export default {
 		},
 	},
 	emits: ['row-hovered', 'connectivity-clicked'],
+	data() {
+		return {
+			hoveredGroupIndex: null,
+		}
+	},
 	methods: {
 		capitalise: function (text) {
 			return capitalise(text)
@@ -135,6 +141,14 @@ export default {
 			if (group.items.length !== 1) return false
 			if (!item.sckanId || !item.mapId) return false
 			return JSON.stringify(item.sckanId) === JSON.stringify(item.mapId)
+		},
+		onSourceHover(groupIndex, item, event) {
+			this.hoveredGroupIndex = groupIndex
+			this.$emit('row-hovered', item, event)
+		},
+		onSourceLeave(item) {
+			this.hoveredGroupIndex = null
+			this.$emit('row-hovered')
 		},
 	},
 }
@@ -246,9 +260,18 @@ export default {
 			border-left: 4px solid #aceebb;
 		}
 
-		&:hover::before {
+		&:hover::before,
+		&.highlighted::before {
 			background-color: #d9ffe0;
 			border-left-color: #7fe09c;
+		}
+	}
+
+	// Target column - unavailable items when highlighted
+	&.target-column.unavailable.highlighted {
+		&::before {
+			background-color: #ffe5e3;
+			border-left-color: #ffb7b4;
 		}
 	}
 
@@ -297,7 +320,8 @@ export default {
 	}
 }
 
-.table-row:hover .status-search-icon {
+.table-row:hover .status-search-icon,
+.target-column.highlighted .status-search-icon {
   opacity: 1;
 }
 </style>
