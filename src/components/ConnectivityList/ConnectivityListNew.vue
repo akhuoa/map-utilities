@@ -91,6 +91,7 @@
                   <span v-else class="no-mapping">—</span>
                 </td>
                 <td
+                  v-if="i === 0"
                   class="table-cell status-column"
                   :class="{ 'grouped-cell': group.items.length > 1 }"
                   :rowspan="group.items.length"
@@ -200,6 +201,7 @@
                   <span v-else class="no-mapping">—</span>
                 </td>
                 <td
+                  v-if="i === 0"
                   class="table-cell status-column"
                   :class="{ 'grouped-cell': group.items.length > 1 }"
                   :rowspan="group.items.length"
@@ -310,6 +312,7 @@
                   <span v-else class="no-mapping">—</span>
                 </td>
                 <td
+                  v-if="i === 0"
                   class="table-cell status-column"
                   :class="{ 'grouped-cell': group.items.length > 1 }"
                   :rowspan="group.items.length"
@@ -727,8 +730,6 @@ export default {
 }
 
 .reconciliation-table {
-  border: 1px solid var(--el-border-color);
-  border-radius: 4px;
   overflow: hidden;
   font-size: 14px;
 }
@@ -742,8 +743,16 @@ export default {
   th,
   td {
     padding: 0.5rem;
-    border-bottom: 1px solid var(--el-border-color-lighter);
     vertical-align: middle;
+  }
+
+  tbody td {
+    border-top: 2px solid #f7faff;
+    border-bottom: 2px solid #f7faff;
+  }
+
+  tbody tr:first-child td {
+    border-top-width: 4px;
   }
 
   thead th {
@@ -752,7 +761,7 @@ export default {
     font-size: 12px;
     color: var(--el-text-color-secondary);
     background-color: var(--el-fill-color-blank);
-    border-bottom: 2px solid var(--el-border-color);
+    border-bottom: 1px solid var(--el-border-color);
     text-align: left;
   }
 
@@ -772,32 +781,60 @@ export default {
   }
 }
 
-.table-row {
-  cursor: default;
-  transition: background-color 0.2s ease;
+// .table-row {
+//   cursor: default;
+//   transition: background-color 0.2s ease;
 
-  &:hover {
-    background-color: var(--el-fill-color-light);
+//   &:hover {
+//     background-color: var(--el-fill-color-light);
 
-    .term-label {
-      color: $app-primary-color;
-    }
+//     .term-label {
+//       color: $app-primary-color;
+//     }
 
-    .magnify-glass {
-      opacity: 1;
-    }
-  }
-}
+//     .magnify-glass {
+//       opacity: 1;
+//     }
+//   }
+// }
 
 .table-cell {
-  background-color: var(--el-fill-color-blank);
+  background-color: #f7faff;
+
+  &.source-column,
+  &.target-column {
+    position: relative;
+
+    &::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      transition: background-color 0.2s ease, border-color 0.2s ease;
+    }
+  }
 
   &.source-column {
-    background-color: #ffebe9;
+    &::before {
+      background-color: #ffebe9;
+      border-left: 4px solid #ffcecb;
+    }
+
+    &:hover::before {
+      background-color: #ffe5e3;
+      border-left-color: #ffb7b4;
+    }
   }
 
   &.target-column {
-    background-color: #e6ffed;
+    &::before {
+      background-color: #e6ffed;
+      border-left: 4px solid #aceebb;
+    }
+
+    &:hover::before {
+      background-color: #d9ffe0;
+      border-left-color: #7fe09c;
+    }
   }
 
   &.grouped-cell {
@@ -813,6 +850,7 @@ export default {
   font-weight: 500;
   transition: color 0.2s ease;
   word-break: break-word;
+  position: relative;
 }
 
 .target-content {
