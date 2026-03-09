@@ -20,7 +20,7 @@
       </template>
     </el-popover>
 
-    <!-- Origins -->
+    <!-- Origins Reconciliation Table -->
     <div v-if="origins && originsCombinations.length > 0" class="block">
       <div class="attribute-title-container">
         <span class="attribute-title">Origin</span>
@@ -38,37 +38,84 @@
           </span>
         </el-popover>
       </div>
-      <div
-        v-for="(origin, i) in processedOriginsCombinations"
-        class="attribute-content"
-        :origin-item-label="origin.mapLabel"
-        :key="origin.mapLabel + '-' + i"
-        @mouseenter="onConnectivityHovered(origin, $event)"
-        @mouseleave="onConnectivityHovered()"
-      >
-        <el-popover
-          width="150"
-          trigger="hover"
-          :teleported="false"
-          popper-class="popover-origin-help"
-        >
-          <template #reference>
-            <el-icon
-              class="magnify-glass"
-              v-show="origin.mapLabel"
-              @click="onConnectivityClicked(origin.mapLabel)"
-            >
-              <el-icon-search />
-            </el-icon>
-          </template>
-          <span>Search connectivity</span>
-        </el-popover>
-        <span>{{ capitalise(origin.mapLabel) }}</span>
-        <span v-if="origin.isUnmapped">
-          <span v-if="origin.mapLabel"> / </span>
-          <s>{{ capitalise(origin.sckanLabel) }}</s>
-        </span>
+
+      <div class="reconciliation-table">
+        <table class="reconciliation-table-inner">
+          <thead>
+            <tr>
+              <th class="source-column">SCKAN Term</th>
+              <th class="target-column">Map Term</th>
+              <th class="status-column">Status</th>
+            </tr>
+          </thead>
+          <tbody>
+            <template v-for="(group, groupIndex) in groupedOrigins" :key="'origin-group-' + groupIndex">
+              <tr
+                v-for="(origin, i) in group.items"
+                :key="'origin-' + groupIndex + '-' + i"
+                class="table-row"
+                :class="{ 'group-last': i === group.items.length - 1 }"
+              >
+                <td
+                  class="table-cell source-column"
+                  @mouseenter="onRowHovered(origin, $event)"
+                  @mouseleave="onRowHovered()"
+                >
+                  <span class="term-label">{{ capitalise(origin.sckanLabel) }}</span>
+                </td>
+                <td
+                  v-if="i === 0"
+                  class="table-cell target-column"
+                  :class="{ 'grouped-cell': group.items.length > 1 }"
+                  :rowspan="group.items.length"
+                >
+                  <div v-if="origin.mapId && origin.mapId.length > 0" class="target-content">
+                    <el-popover
+                      width="150"
+                      trigger="hover"
+                      :teleported="false"
+                      popper-class="popover-origin-help"
+                    >
+                      <template #reference>
+                        <el-icon
+                          class="magnify-glass"
+                          @click="onConnectivityClicked(origin.mapLabel)"
+                        >
+                          <el-icon-search />
+                        </el-icon>
+                      </template>
+                      <span>Search connectivity</span>
+                    </el-popover>
+                    <span class="term-label">{{ capitalise(origin.mapLabel) }}</span>
+                  </div>
+                  <span v-else class="no-mapping">—</span>
+                </td>
+                <td
+                  class="table-cell status-column"
+                  :class="{ 'grouped-cell': group.items.length > 1 }"
+                  :rowspan="group.items.length"
+                >
+                  <el-icon
+                    v-if="origin.mapId && origin.mapId.length > 0"
+                    class="status-icon mapped"
+                    title="Mapped"
+                  >
+                    <el-icon-check />
+                  </el-icon>
+                  <el-icon
+                    v-else
+                    class="status-icon unmapped"
+                    title="Not available on map"
+                  >
+                    <el-icon-close />
+                  </el-icon>
+                </td>
+              </tr>
+            </template>
+          </tbody>
+        </table>
       </div>
+
       <el-button
         v-show="
           originsWithDatasets && originsWithDatasets.length > 0 &&
@@ -82,7 +129,7 @@
       </el-button>
     </div>
 
-    <!-- Components -->
+    <!-- Components Reconciliation Table -->
     <div
       v-if="components && componentsCombinations.length > 0"
       class="block"
@@ -90,40 +137,86 @@
       <div class="attribute-title-container">
         <span class="attribute-title">Components</span>
       </div>
-      <div
-        v-for="(component, i) in processedComponentsCombinations"
-        class="attribute-content"
-        :component-item-label="component.mapLabel"
-        :key="component.mapLabel + '-' + i"
-        @mouseenter="onConnectivityHovered(component, $event)"
-        @mouseleave="onConnectivityHovered()"
-      >
-        <el-popover
-          width="150"
-          trigger="hover"
-          :teleported="false"
-          popper-class="popover-origin-help"
-        >
-          <template #reference>
-            <el-icon
-              class="magnify-glass"
-              v-show="component.mapLabel"
-              @click="onConnectivityClicked(component.mapLabel)"
-            >
-              <el-icon-search />
-            </el-icon>
-          </template>
-          <span>Search connectivity</span>
-        </el-popover>
-        <span>{{ capitalise(component.mapLabel) }}</span>
-        <span v-if="component.isUnmapped">
-          <span v-if="component.mapLabel"> / </span>
-          <s>{{ capitalise(component.sckanLabel) }}</s>
-        </span>
+
+      <div class="reconciliation-table">
+        <table class="reconciliation-table-inner">
+          <thead>
+            <tr>
+              <th class="source-column">SCKAN Term</th>
+              <th class="target-column">Map Term</th>
+              <th class="status-column">Status</th>
+            </tr>
+          </thead>
+          <tbody>
+            <template v-for="(group, groupIndex) in groupedComponents" :key="'component-group-' + groupIndex">
+              <tr
+                v-for="(component, i) in group.items"
+                :key="'component-' + groupIndex + '-' + i"
+                class="table-row"
+                :class="{ 'group-last': i === group.items.length - 1 }"
+              >
+                <td
+                  class="table-cell source-column"
+                  @mouseenter="onRowHovered(component, $event)"
+                  @mouseleave="onRowHovered()"
+                >
+                  <span class="term-label">{{ capitalise(component.sckanLabel) }}</span>
+                </td>
+                <td
+                  v-if="i === 0"
+                  class="table-cell target-column"
+                  :class="{ 'grouped-cell': group.items.length > 1 }"
+                  :rowspan="group.items.length"
+                >
+                  <div v-if="component.mapId && component.mapId.length > 0" class="target-content">
+                    <el-popover
+                      width="150"
+                      trigger="hover"
+                      :teleported="false"
+                      popper-class="popover-origin-help"
+                    >
+                      <template #reference>
+                        <el-icon
+                          class="magnify-glass"
+                          @click="onConnectivityClicked(component.mapLabel)"
+                        >
+                          <el-icon-search />
+                        </el-icon>
+                      </template>
+                      <span>Search connectivity</span>
+                    </el-popover>
+                    <span class="term-label">{{ capitalise(component.mapLabel) }}</span>
+                  </div>
+                  <span v-else class="no-mapping">—</span>
+                </td>
+                <td
+                  class="table-cell status-column"
+                  :class="{ 'grouped-cell': group.items.length > 1 }"
+                  :rowspan="group.items.length"
+                >
+                  <el-icon
+                    v-if="component.mapId && component.mapId.length > 0"
+                    class="status-icon mapped"
+                    title="Mapped"
+                  >
+                    <el-icon-check />
+                  </el-icon>
+                  <el-icon
+                    v-else
+                    class="status-icon unmapped"
+                    title="Not available on map"
+                  >
+                    <el-icon-close />
+                  </el-icon>
+                </td>
+              </tr>
+            </template>
+          </tbody>
+        </table>
       </div>
     </div>
 
-    <!-- Destinations -->
+    <!-- Destinations Reconciliation Table -->
     <div
       v-if="destinations && destinationsCombinations.length > 0"
       class="block"
@@ -144,37 +237,84 @@
           </span>
         </el-popover>
       </div>
-      <div
-        v-for="(destination, i) in processedDestinationsCombinations"
-        class="attribute-content"
-        :destination-item-label="destination.mapLabel"
-        :key="destination.mapLabel + '-' + i"
-        @mouseenter="onConnectivityHovered(destination, $event)"
-        @mouseleave="onConnectivityHovered()"
-      >
-        <el-popover
-          width="150"
-          trigger="hover"
-          :teleported="false"
-          popper-class="popover-origin-help"
-        >
-          <template #reference>
-            <el-icon
-              class="magnify-glass"
-              v-show="destination.mapLabel"
-              @click="onConnectivityClicked(destination.mapLabel)"
-            >
-              <el-icon-search />
-            </el-icon>
-          </template>
-          <span>Search connectivity</span>
-        </el-popover>
-        <span>{{ capitalise(destination.mapLabel) }}</span>
-        <span v-if="destination.isUnmapped">
-          <span v-if="destination.mapLabel"> / </span>
-          <s>{{ capitalise(destination.sckanLabel) }}</s>
-        </span>
+
+      <div class="reconciliation-table">
+        <table class="reconciliation-table-inner">
+          <thead>
+            <tr>
+              <th class="source-column">SCKAN Term</th>
+              <th class="target-column">Map Term</th>
+              <th class="status-column">Status</th>
+            </tr>
+          </thead>
+          <tbody>
+            <template v-for="(group, groupIndex) in groupedDestinations" :key="'destination-group-' + groupIndex">
+              <tr
+                v-for="(destination, i) in group.items"
+                :key="'destination-' + groupIndex + '-' + i"
+                class="table-row"
+                :class="{ 'group-last': i === group.items.length - 1 }"
+              >
+                <td
+                  class="table-cell source-column"
+                  @mouseenter="onRowHovered(destination, $event)"
+                  @mouseleave="onRowHovered()"
+                >
+                  <span class="term-label">{{ capitalise(destination.sckanLabel) }}</span>
+                </td>
+                <td
+                  v-if="i === 0"
+                  class="table-cell target-column"
+                  :class="{ 'grouped-cell': group.items.length > 1 }"
+                  :rowspan="group.items.length"
+                >
+                  <div v-if="destination.mapId && destination.mapId.length > 0" class="target-content">
+                    <el-popover
+                      width="150"
+                      trigger="hover"
+                      :teleported="false"
+                      popper-class="popover-origin-help"
+                    >
+                      <template #reference>
+                        <el-icon
+                          class="magnify-glass"
+                          @click="onConnectivityClicked(destination.mapLabel)"
+                        >
+                          <el-icon-search />
+                        </el-icon>
+                      </template>
+                      <span>Search connectivity</span>
+                    </el-popover>
+                    <span class="term-label">{{ capitalise(destination.mapLabel) }}</span>
+                  </div>
+                  <span v-else class="no-mapping">—</span>
+                </td>
+                <td
+                  class="table-cell status-column"
+                  :class="{ 'grouped-cell': group.items.length > 1 }"
+                  :rowspan="group.items.length"
+                >
+                  <el-icon
+                    v-if="destination.mapId && destination.mapId.length > 0"
+                    class="status-icon mapped"
+                    title="Mapped"
+                  >
+                    <el-icon-check />
+                  </el-icon>
+                  <el-icon
+                    v-else
+                    class="status-icon unmapped"
+                    title="Not available on map"
+                  >
+                    <el-icon-close />
+                  </el-icon>
+                </td>
+              </tr>
+            </template>
+          </tbody>
+        </table>
       </div>
+
       <el-button
         v-show="
           destinationsWithDatasets &&
@@ -211,6 +351,8 @@
 import {
   Warning as ElIconWarning,
   Search as ElIconSearch,
+  Check as ElIconCheck,
+  Close as ElIconClose,
 } from '@element-plus/icons-vue'
 import {
   ElButton as Button,
@@ -226,7 +368,9 @@ export default {
     Container,
     Icon,
     ElIconWarning,
-    ElIconSearch
+    ElIconSearch,
+    ElIconCheck,
+    ElIconClose,
   },
   props: {
     entry: {
@@ -323,68 +467,49 @@ export default {
         return this.originDescriptions.sensory
       }
     },
-    // Deduplicate origins by mapId and collect mapped SCKAN labels
-    processedOriginsCombinations: function () {
-      return this.processCombinations(this.originsCombinations)
+    // Group origins by mapId - multiple SCKAN terms can map to the same Map term
+    groupedOrigins: function () {
+      return this.groupCombinationsByMapId(this.originsCombinations)
     },
-    // Deduplicate destinations by mapId and collect mapped SCKAN labels
-    processedDestinationsCombinations: function () {
-      return this.processCombinations(this.destinationsCombinations)
+    // Group components by mapId
+    groupedComponents: function () {
+      return this.groupCombinationsByMapId(this.componentsCombinations)
     },
-    // Deduplicate components by mapId and collect mapped SCKAN labels
-    processedComponentsCombinations: function () {
-      return this.processCombinations(this.componentsCombinations)
+    // Group destinations by mapId
+    groupedDestinations: function () {
+      return this.groupCombinationsByMapId(this.destinationsCombinations)
     },
   },
   methods: {
     capitalise: function (text) {
       return capitalise(text)
     },
-    // Process combinations to deduplicate by mapId and collect mapped SCKAN labels
-    processCombinations: function (combinations) {
-      const mapIdToItem = new Map()
-      const unmappedItems = []
+    // Group combinations by mapId (or lack thereof)
+    // Returns array of groups, each with items array
+    groupCombinationsByMapId: function (combinations) {
+      const groups = []
+      const mapIdToGroup = new Map()
 
       combinations.forEach((combo) => {
-        // Items without mapId are considered unmapped (not available on map)
         if (!combo.mapId || combo.mapId.length === 0) {
-          unmappedItems.push({
-            mapId: combo.mapId,
-            mapLabel: combo.mapLabel,
-            sckanLabel: combo.sckanLabel,
-            sckanId: combo.sckanId,
-            mappedSckanLabels: [],
-            isUnmapped: true,
-          })
-          return
-        }
+          // Unmapped items - each gets its own group (no grouping)
+          groups.push({ items: [combo] })
+        } else {
+          const mapIdKey = JSON.stringify(combo.mapId)
 
-        const mapIdKey = JSON.stringify(combo.mapId)
+          if (!mapIdToGroup.has(mapIdKey)) {
+            const group = { items: [] }
+            mapIdToGroup.set(mapIdKey, group)
+            groups.push(group)
+          }
 
-        if (!mapIdToItem.has(mapIdKey)) {
-          mapIdToItem.set(mapIdKey, {
-            mapId: combo.mapId,
-            mapLabel: combo.mapLabel,
-            sckanLabel: combo.sckanLabel,
-            sckanId: combo.sckanId,
-            mappedSckanLabels: [],
-            isUnmapped: false,
-          })
-        }
-
-        const item = mapIdToItem.get(mapIdKey)
-
-        // Collect all SCKAN labels mapped to this map item
-        // Avoid duplicates in mappedSckanLabels
-        if (!item.mappedSckanLabels.includes(combo.sckanLabel)) {
-          item.mappedSckanLabels.push(combo.sckanLabel)
+          mapIdToGroup.get(mapIdKey).items.push(combo)
         }
       })
 
-      // Return mapped items followed by unmapped items
-      return [...Array.from(mapIdToItem.values()), ...unmappedItems]
+      return groups
     },
-    onConnectivityHovered: function (combination, event) {
+    onRowHovered: function (combination, event) {
       if (this.clearErrorTimeout) {
         clearTimeout(this.clearErrorTimeout);
         this.clearErrorTimeout = null;
@@ -394,44 +519,34 @@ export default {
       let newError = { hasError: false, errorType: '', errorMessage: '' };
 
       if (combination) {
-        if (combination.mapId.length) {
+        if (combination.mapId && combination.mapId.length > 0) {
           // If there is mapId, it exists on the map.
           // Show hover highlight on the map.
           const hoveredLabel = combination.mapLabel.toLowerCase();
           this.$emit('connectivity-hovered', hoveredLabel);
 
-          // If there are mapped SCKAN labels, show them in a list
-          if (combination.mappedSckanLabels && combination.mappedSckanLabels.length > 0) {
-            const sckanList = combination.mappedSckanLabels
-              .map(label => `<li>${label}</li>`)
-              .join('');
-            const messageHead = `<em>Mapped from these SCKAN entries:</em>`;
-            const messageBody = `<ul>${sckanList}</ul>`;
-            newError = {
-              hasError: true,
-              errorType: 'warning',
-              errorMessage: `${messageHead}${messageBody}`,
-            };
-          }
           // If the SCKAN term and the Map term are different, show warning message.
-          else if (JSON.stringify(combination.sckanId) !== JSON.stringify(combination.mapId)) {
+          if (JSON.stringify(combination.sckanId) !== JSON.stringify(combination.mapId)) {
             newError = {
               hasError: true,
               errorType: 'warning',
-              errorMessage: `<strong>${combination.sckanLabel}</strong> from the SCKAN
+              errorMessage: `<strong>${combination.sckanLabel}</strong> from SCKAN
                             has been mapped to <strong>${combination.mapLabel}</strong> on the Map.`,
             };
           }
-        } else if (combination.sckanId.length) {
+        } else if (combination.sckanId && combination.sckanId.length > 0) {
           // If there is no mapId but there is sckanId,
           // it means the SCKAN term is not available on the Map.
           newError = {
             hasError: true,
             errorType: 'error',
-            errorMessage: `<strong>${combination.sckanLabel}</strong> from the SCKAN
+            errorMessage: `<strong>${combination.sckanLabel}</strong> from SCKAN
                           is not available on the Map.`,
           };
         }
+      } else {
+        // Mouse leave - clear the hover highlight
+        this.$emit('connectivity-hovered', null);
       }
 
       if (newError.hasError) {
@@ -451,12 +566,12 @@ export default {
       }
 
       if (event) {
-        const element = event.srcElement || event.target;
+        const element = event.currentTarget;
         const rect = element.getBoundingClientRect();
-        const x = event.clientX - rect.left; // use mouse position relative to the element
+        const containerRect = this.$refs.connectivityList.getBoundingClientRect();
 
-        this.alertTop = element.offsetParent.offsetTop + element.offsetTop;
-        this.alertLeft = x;
+        this.alertTop = rect.top - containerRect.top;
+        this.alertLeft = rect.left - containerRect.left + (rect.width / 2);
       }
     },
     onConnectivityClicked: function (name) {
@@ -527,7 +642,7 @@ export default {
 
 .button {
   margin-left: 0px !important;
-  margin-top: 0px !important;
+  margin-top: 0.5rem !important;
   font-size: 14px !important;
   background-color: $app-primary-color;
   color: #fff;
@@ -580,50 +695,126 @@ export default {
 .attribute-title {
   font-size: 16px;
   font-weight: 600;
-  /* font-weight: bold; */
   text-transform: uppercase;
 }
 
-.attribute-content {
+.reconciliation-table {
+  border: 1px solid var(--el-border-color);
+  border-radius: 4px;
+  overflow: hidden;
   font-size: 14px;
-  font-weight: 500;
-  transition: color 0.25s ease;
-  position: relative;
-  cursor: default;
-  padding-left: 16px;
+}
 
-  .magnify-glass {
-    display: none;
-    position: absolute;
-    top: 0;
-    left: 0;
+.reconciliation-table-inner {
+  width: 100%;
+  border-collapse: separate;
+  border-spacing: 0;
+  table-layout: fixed;
+
+  th,
+  td {
+    padding: 0.5rem;
+    border-bottom: 1px solid var(--el-border-color-lighter);
+    vertical-align: middle;
   }
+
+  thead th {
+    font-weight: 600;
+    text-transform: uppercase;
+    font-size: 12px;
+    color: var(--el-text-color-secondary);
+    background-color: var(--el-fill-color-blank);
+    border-bottom: 2px solid var(--el-border-color);
+    text-align: left;
+  }
+
+  .source-column {
+    width: 45%;
+    text-align: left;
+  }
+
+  .target-column {
+    width: 45%;
+    text-align: left;
+  }
+
+  .status-column {
+    width: 10%;
+    text-align: center;
+  }
+}
+
+.table-row {
+  cursor: default;
+  transition: background-color 0.2s ease;
 
   &:hover {
-    color: $app-primary-color;
+    background-color: var(--el-fill-color-light);
+
+    .term-label {
+      color: $app-primary-color;
+    }
 
     .magnify-glass {
-      display: block;
-      padding-top: 4px;
-      cursor: pointer;
+      opacity: 1;
     }
   }
+}
 
-  + .attribute-content {
-    &::before {
-      content: "";
-      width: 90%;
-      height: 1px;
-      background-color: var(--el-border-color);
-      position: absolute;
-      top: 0;
-      left: 0;
-    }
+.table-cell {
+  background-color: var(--el-fill-color-blank);
+
+  &.grouped-cell {
+    background-color: var(--el-fill-color-lighter);
+    vertical-align: middle;
   }
 
-  &:last-of-type {
-    margin-bottom: 0.5em;
+  &.status-column {
+    text-align: center;
   }
+}
+
+.term-label {
+  font-weight: 500;
+  transition: color 0.2s ease;
+  word-break: break-word;
+}
+
+.target-content {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  position: relative;
+}
+
+.status-icon {
+  font-size: 16px;
+
+  &.mapped {
+    color: var(--el-color-success);
+  }
+
+  &.unmapped {
+    color: var(--el-color-error);
+  }
+}
+
+.magnify-glass {
+  font-size: 16px;
+  color: $app-primary-color;
+  cursor: pointer;
+  opacity: 0;
+  transition: opacity 0.2s ease;
+  flex-shrink: 0;
+
+  &:hover {
+    color: #ac76c5;
+  }
+}
+
+.no-mapping {
+  color: var(--el-text-color-placeholder);
+  font-style: italic;
 }
 
 .connectivity-alert {
@@ -637,10 +828,11 @@ export default {
   min-height: 31px; // placeholder
   align-items: center;
   justify-content: center;
-  padding: 0.25rem 0.5rem;
+  padding: 0.5rem 0.75rem;
   border-radius: var(--el-border-radius-small);
   pointer-events: none;
   word-break: break-word;
+  font-size: 12px;
 }
 
 .connectivity-list :deep(.connectivity-error-container.el-popover ul),
