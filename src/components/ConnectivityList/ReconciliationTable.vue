@@ -1,12 +1,6 @@
 <template>
 	<div class="reconciliation-table">
 		<table class="reconciliation-table-inner">
-			<thead>
-				<tr>
-					<th class="source-column">SCKAN Term</th>
-					<th class="target-column">Map Term</th>
-				</tr>
-			</thead>
 			<tbody>
 				<template v-for="(group, groupIndex) in groups" :key="`${tableKey}-group-${groupIndex}`">
 					<tr
@@ -176,7 +170,6 @@ export default {
 	border-spacing: 0;
 	table-layout: fixed;
 
-	th,
 	td {
 		padding: 0.5rem;
 		vertical-align: middle;
@@ -189,16 +182,6 @@ export default {
 
 	tbody tr:first-child td {
 		border-top-width: 4px;
-	}
-
-	thead th {
-		font-weight: 600;
-		text-transform: uppercase;
-		font-size: 12px;
-    padding: 0 0.5rem;
-		color: var(--el-text-color-secondary);
-		border-bottom: 1px solid var(--el-border-color);
-		text-align: left;
 	}
 
   .source-column,
