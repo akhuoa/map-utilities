@@ -195,8 +195,8 @@ export default {
 		font-weight: 600;
 		text-transform: uppercase;
 		font-size: 12px;
+    padding: 0 0.5rem;
 		color: var(--el-text-color-secondary);
-		background-color: var(--el-fill-color-blank);
 		border-bottom: 1px solid var(--el-border-color);
 		text-align: left;
 	}
@@ -209,8 +209,6 @@ export default {
 }
 
 .table-cell {
-	background-color: #f7faff;
-
 	&.source-column,
 	&.target-column,
 	&.direct-match-cell {
@@ -267,13 +265,15 @@ export default {
 	&.target-column.unavailable {
 		&::before {
 			background-color: #ffebe9;
-			border-left: 4px solid #ffcecb;
 		}
 
 		&:hover::before {
 			background-color: #ffe5e3;
-			border-left-color: #ffb7b4;
 		}
+
+    .target-content {
+      justify-content: flex-end;
+    }
 	}
 
 	// Target column - available but not direct match
