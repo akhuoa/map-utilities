@@ -49,6 +49,7 @@
 						<template v-else>
 							<td
 								class="table-cell source-column"
+								:class="{ 'mapped': this.isMatch(item) }"
 								@mouseenter="onSourceHover(groupIndex, item, $event)"
 								@mouseleave="onSourceLeave(item)"
 							>
@@ -142,8 +143,11 @@ export default {
 			// 2. Both IDs exist and match exactly
 			if (group.items.length !== 1) return false
 			if (!item.sckanId || !item.mapId) return false
-			return JSON.stringify(item.sckanId) === JSON.stringify(item.mapId)
+			return this.isMatch(item)
 		},
+    isMatch: function (item) {
+      return JSON.stringify(item.sckanId) === JSON.stringify(item.mapId)
+    },
     onTargetHover(groupIndex, item, event) {
 			this.hoveredGroupIndex = groupIndex
 			this.$emit('row-hovered', item, event, true)
@@ -233,8 +237,21 @@ export default {
 		}
 	}
 
-	// Source column (non-direct match cases)
-	&.source-column {
+	// Source column - mapped items use same style as target available style
+	&.source-column.mapped {
+		&::before {
+			background-color: #e6ffed;
+			border-left: 4px solid #aceebb;
+		}
+
+		&:hover::before {
+			background-color: #d9ffe0;
+			border-left-color: #7fe09c;
+		}
+	}
+
+	// Source column - non-mapped items
+	&.source-column:not(.mapped) {
 		&::before {
 			background-color: #ffebe9;
 			border-left: 4px solid #ffcecb;
