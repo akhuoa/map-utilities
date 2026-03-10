@@ -291,7 +291,7 @@ export default {
 
       return groups
     },
-    onRowHovered: function (combination, event) {
+    onRowHovered: function (combination, event, isMapIdHover = false) {
       if (this.clearErrorTimeout) {
         clearTimeout(this.clearErrorTimeout);
         this.clearErrorTimeout = null;
@@ -308,7 +308,7 @@ export default {
           this.$emit('connectivity-hovered', hoveredLabel);
 
           // If the SCKAN term and the Map term are different, show warning message.
-          if (JSON.stringify(combination.sckanId) !== JSON.stringify(combination.mapId)) {
+          if (!isMapIdHover && JSON.stringify(combination.sckanId) !== JSON.stringify(combination.mapId)) {
             newError = {
               hasError: true,
               errorType: 'warning',

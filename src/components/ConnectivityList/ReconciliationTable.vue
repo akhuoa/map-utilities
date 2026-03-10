@@ -63,6 +63,8 @@
 									'highlighted': hoveredGroupIndex === groupIndex
 								}"
 								:rowspan="group.items.length"
+								@mouseenter="onTargetHover(groupIndex, item, $event)"
+								@mouseleave="onSourceLeave(item)"
 							>
 								<div class="target-content">
 									<template v-if="item.mapId && item.mapId.length > 0">
@@ -142,9 +144,13 @@ export default {
 			if (!item.sckanId || !item.mapId) return false
 			return JSON.stringify(item.sckanId) === JSON.stringify(item.mapId)
 		},
+    onTargetHover(groupIndex, item, event) {
+			this.hoveredGroupIndex = groupIndex
+			this.$emit('row-hovered', item, event, true)
+		},
 		onSourceHover(groupIndex, item, event) {
 			this.hoveredGroupIndex = groupIndex
-			this.$emit('row-hovered', item, event)
+			this.$emit('row-hovered', item, event, false)
 		},
 		onSourceLeave(item) {
 			this.hoveredGroupIndex = null
