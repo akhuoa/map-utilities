@@ -21,6 +21,18 @@
       </template>
     </el-popover>
 
+    <!-- Legends: SCKAN, Map, mapped, unavailable -->
+    <div class="legends">
+      <span class="legend-item">
+        <span class="legend-color mapped"></span>
+        Mapped term
+      </span>
+      <span class="legend-item">
+        <span class="legend-color unavailable"></span>
+        Unavailable on the Map
+      </span>
+    </div>
+
     <!-- Origins Reconciliation Table -->
     <div v-if="origins && originsCombinations.length > 0" class="block">
       <div class="attribute-title-container">
@@ -527,5 +539,36 @@ export default {
 .connectivity-list :deep(.connectivity-warning-container.el-popover) {
   background-color: var(--el-color-warning-light-9);
   border: 1px solid var(--el-color-warning);
+}
+
+.legends {
+  display: flex;
+  gap: 1.5rem;
+  margin-bottom: 0.5rem;
+
+  .legend-item {
+    display: flex;
+    align-items: center;
+    gap: 0.25rem;
+    font-size: 12px;
+    line-height: 1;
+    color: var(--el-text-color-secondary);
+
+    .legend-color {
+      display: inline-block;
+      width: 12px;
+      height: 12px;
+      border-radius: 2px;
+      margin-top: -2px;
+
+      &.mapped {
+        background-color: #aceebb;
+      }
+
+      &.unavailable {
+        background-color: #f08080;
+      }
+    }
+  }
 }
 </style>
