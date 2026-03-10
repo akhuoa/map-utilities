@@ -5,7 +5,8 @@
       width="250"
       :show-arrow="false"
       trigger="manual"
-      :teleported="false"
+      :teleported="true"
+      :append-to="connectivityListContainer"
       placement="bottom-start"
       :visible="connectivityError.hasError && !!connectivityError.errorMessage"
       :popper-class="connectivityError.errorType === 'warning' ? 'connectivity-warning-container' : 'connectivity-error-container'"
@@ -27,7 +28,8 @@
         <el-popover
           width="250"
           trigger="hover"
-          :teleported="false"
+          :teleported="true"
+          :append-to="connectivityListContainer"
           popper-class="popover-origin-help"
         >
           <template #reference>
@@ -42,6 +44,7 @@
       <ReconciliationTable
         table-key="origin"
         :groups="groupedOrigins"
+        :connectivity-list-container="connectivityListContainer"
         @row-hovered="onRowHovered"
         @connectivity-clicked="onConnectivityClicked"
       />
@@ -71,6 +74,7 @@
       <ReconciliationTable
         table-key="component"
         :groups="groupedComponents"
+        :connectivity-list-container="connectivityListContainer"
         @row-hovered="onRowHovered"
         @connectivity-clicked="onConnectivityClicked"
       />
@@ -86,7 +90,8 @@
         <el-popover
           width="250"
           trigger="hover"
-          :teleported="false"
+          :teleported="true"
+          :append-to="connectivityListContainer"
           popper-class="popover-origin-help"
         >
           <template #reference>
@@ -101,6 +106,7 @@
       <ReconciliationTable
         table-key="destination"
         :groups="groupedDestinations"
+        :connectivity-list-container="connectivityListContainer"
         @row-hovered="onRowHovered"
         @connectivity-clicked="onConnectivityClicked"
       />
@@ -229,6 +235,7 @@ export default {
       },
       facetList: [],
       clearErrorTimeout: null,
+      connectivityListContainer: null,
     }
   },
   watch: {
@@ -239,6 +246,9 @@ export default {
       immediate: true,
       deep: true,
     },
+  },
+  mounted: function () {
+    this.connectivityListContainer = this.$refs.connectivityList;
   },
   computed: {
     originDescription: function () {

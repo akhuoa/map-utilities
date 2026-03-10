@@ -28,7 +28,8 @@
 									<el-popover
 										width="150"
 										trigger="hover"
-										:teleported="false"
+										:teleported="true"
+										:append-to="connectivityListContainer"
 										popper-class="popover-origin-help"
 									>
 										<template #reference>
@@ -76,7 +77,8 @@
 										<el-popover
 											width="150"
 											trigger="hover"
-											:teleported="false"
+											:teleported="true"
+											:append-to="connectivityListContainer"
 											popper-class="popover-origin-help"
 										>
 											<template #reference>
@@ -119,6 +121,10 @@ export default {
 		tableKey: {
 			type: String,
 			default: 'reconciliation',
+		},
+		connectivityListContainer: {
+			type: HTMLElement,
+			default: null,
 		},
 	},
 	emits: ['row-hovered', 'connectivity-clicked'],
