@@ -49,7 +49,10 @@
 						<template v-else>
 							<td
 								class="table-cell source-column"
-								:class="{ 'mapped': this.isMatch(item) }"
+								:class="{
+									'mapped': this.isMatch(item),
+									'highlighted-by-target': hoveredGroupIndex === groupIndex && (!group.items[0].mapId || group.items[0].mapId.length === 0)
+								}"
 								@mouseenter="onSourceHover(groupIndex, item, $event)"
 								@mouseleave="onSourceLeave(item)"
 							>
@@ -87,13 +90,6 @@
 											<span>Search connectivity</span>
 										</el-popover>
 									</template>
-									<el-icon
-										v-else
-										class="status-icon unmapped"
-										title="Not available on map"
-									>
-										<el-icon-close />
-									</el-icon>
 								</div>
 							</td>
 						</template>
@@ -107,7 +103,6 @@
 <script>
 import {
 	Search as ElIconSearch,
-	Close as ElIconClose,
 } from '@element-plus/icons-vue'
 import { capitalise } from '../utilities'
 
@@ -115,7 +110,6 @@ export default {
 	name: 'ReconciliationTable',
 	components: {
 		ElIconSearch,
-		ElIconClose,
 	},
 	props: {
 		groups: {
@@ -261,6 +255,14 @@ export default {
 		}
 	}
 
+	// Source column - highlighted when its group's unavailable target is hovered
+	&.source-column.highlighted-by-target {
+		&::before {
+			background-color: #ffe5e3;
+			border-left-color: #ffb7b4;
+		}
+	}
+
 	// Target column - unavailable items
 	&.target-column.unavailable {
 		&::before {
@@ -317,18 +319,6 @@ export default {
   justify-content: space-between;
 	gap: 0.5rem;
 	position: relative;
-}
-
-.status-icon {
-	font-size: 16px;
-
-	&.mapped {
-		color: var(--el-color-success);
-	}
-
-	&.unmapped {
-		color: var(--el-color-error);
-	}
 }
 
 .status-search-icon {
