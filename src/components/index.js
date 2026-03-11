@@ -3,7 +3,7 @@ import CreateTooltipContent from "./Tooltip/CreateTooltipContent.vue";
 import ConnectivityGraph from "./ConnectivityGraph/ConnectivityGraph.vue";
 import ConnectivityGraphNew from "./ConnectivityGraph/ConnectivityGraphNew.vue";
 import ConnectivityList from "./ConnectivityList/ConnectivityList.vue";
-import ConnectivityListNew from "./ConnectivityList/ConnectivityListNew.vue";
+import ConnectivityReconciliationList from "./ConnectivityList/ConnectivityReconciliationList.vue";
 import CopyToClipboard from "./CopyToClipboard/CopyToClipboard.vue";
 import DrawToolbar from "./DrawToolbar/DrawToolbar.vue";
 import HelpModeDialog from "./HelpModeDialog/HelpModeDialog.vue";
@@ -40,7 +40,7 @@ export {
   CreateTooltipContent,
   ConnectivityGraph,
   ConnectivityList,
-  ConnectivityListNew,
+  ConnectivityReconciliationList,
   ConnectivityGraphNew,
   CopyToClipboard,
   DrawToolbar,

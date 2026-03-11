@@ -167,7 +167,7 @@ import {
 import ReconciliationTable from './ReconciliationTable.vue'
 
 export default {
-  name: 'ConnectivityListNew',
+  name: 'ConnectivityReconciliationList',
   components: {
     Button,
     Container,

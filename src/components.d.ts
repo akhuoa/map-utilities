@@ -12,7 +12,7 @@ declare module 'vue' {
     ConnectivityGraph: typeof import('./components/ConnectivityGraph/ConnectivityGraph.vue')['default']
     ConnectivityGraphNew: typeof import('./components/ConnectivityGraph/ConnectivityGraphNew.vue')['default']
     ConnectivityList: typeof import('./components/ConnectivityList/ConnectivityList.vue')['default']
-    ConnectivityListNew: typeof import('./components/ConnectivityList/ConnectivityListNew.vue')['default']
+    ConnectivityReconciliationList: typeof import('./components/ConnectivityList/ConnectivityReconciliationList.vue')['default']
     CopyToClipboard: typeof import('./components/CopyToClipboard/CopyToClipboard.vue')['default']
     CreateTooltipContent: typeof import('./components/Tooltip/CreateTooltipContent.vue')['default']
     DrawToolbar: typeof import('./components/DrawToolbar/DrawToolbar.vue')['default']
