@@ -32,6 +32,8 @@ async function _postRequest(API_URL, payload) {
 
 /**
  * CQ query 27: Single Connectivity List
+ * This query is available for the new SCKAN knowledge source "sckan-2026-02-11".
+ * The legacy maps don't have node-mappings.
  * @param {*} flatmapAPI
  * @param {*} knowledgeSource mapuuid
  * @param {*} pathId
