@@ -21,15 +21,15 @@
       </template>
     </el-popover>
 
-    <!-- Legends: SCKAN, Map, mapped, unavailable -->
+    <!-- Legends: SCKAN vs Map -->
     <div class="legends">
       <span class="legend-item">
-        <span class="legend-color mapped"></span>
-        Mapped term
+        <span class="legend-color unavailable"></span>
+        SCKAN feature differs on Map or is not available
       </span>
       <span class="legend-item">
-        <span class="legend-color unavailable"></span>
-        Unavailable on the Map
+        <span class="legend-color mapped"></span>
+        Feature available on Map
       </span>
     </div>
 
@@ -543,8 +543,8 @@ export default {
 
 .legends {
   display: flex;
-  gap: 1.5rem;
-  margin-bottom: 0.5rem;
+  flex-direction: column;
+  gap: 0.5rem;
 
   .legend-item {
     display: flex;
@@ -558,15 +558,17 @@ export default {
       display: inline-block;
       width: 12px;
       height: 12px;
-      border-radius: 2px;
-      margin-top: -2px;
+      margin-top: -1px;
+      border-left: 2px solid;
 
       &.mapped {
-        background-color: #aceebb;
+        background-color: #d9ffe0;
+			  border-left-color: #7fe09c;
       }
 
       &.unavailable {
-        background-color: #f08080;
+        background-color: #ffe5e3;
+			  border-left-color: #ffb7b4;
       }
     }
   }
