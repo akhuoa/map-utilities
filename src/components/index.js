@@ -1,7 +1,6 @@
 import AnnotationPopup from "./Tooltip/AnnotationPopup.vue";
 import CreateTooltipContent from "./Tooltip/CreateTooltipContent.vue";
 import ConnectivityGraph from "./ConnectivityGraph/ConnectivityGraph.vue";
-import ConnectivityGraphNew from "./ConnectivityGraph/ConnectivityGraphNew.vue";
 import ConnectivityList from "./ConnectivityList/ConnectivityList.vue";
 import ConnectivityReconciliationList from "./ConnectivityList/ConnectivityReconciliationList.vue";
 import CopyToClipboard from "./CopyToClipboard/CopyToClipboard.vue";
@@ -41,7 +40,6 @@ export {
   ConnectivityGraph,
   ConnectivityList,
   ConnectivityReconciliationList,
-  ConnectivityGraphNew,
   CopyToClipboard,
   DrawToolbar,
   HelpModeDialog,
