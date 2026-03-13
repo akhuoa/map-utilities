@@ -25,15 +25,15 @@
     <div class="legends">
       <span class="legend-item">
         <span class="legend-color differ"></span>
-        SCKAN feature differs on Map
+        SCKAN feature maps differently on Map
       </span>
       <span class="legend-item">
         <span class="legend-color unavailable"></span>
-        SCKAN feature is not available on Map
+        SCKAN feature unavailable on Map
       </span>
       <span class="legend-item">
         <span class="legend-color mapped"></span>
-        SCKAN Feature available on Map
+        SCKAN feature available on Map
       </span>
     </div>
 
