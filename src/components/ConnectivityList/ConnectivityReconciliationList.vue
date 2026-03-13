@@ -24,12 +24,16 @@
     <!-- Legends: SCKAN vs Map -->
     <div class="legends">
       <span class="legend-item">
+        <span class="legend-color differ"></span>
+        SCKAN feature differs on Map
+      </span>
+      <span class="legend-item">
         <span class="legend-color unavailable"></span>
-        SCKAN feature differs on Map or is not available
+        SCKAN feature is not available on Map
       </span>
       <span class="legend-item">
         <span class="legend-color mapped"></span>
-        Feature available on Map
+        SCKAN Feature available on Map
       </span>
     </div>
 
@@ -569,6 +573,19 @@ export default {
       &.unavailable {
         background-color: #ffe5e3;
 			  border-left-color: #ffb7b4;
+      }
+
+      &.differ {
+        background: linear-gradient(
+          90deg,
+          #ffe5e3 0%,
+          #ffe5e3 calc(50% - 1px),
+          #7fe09c calc(50% - 1px),
+          #7fe09c calc(50% + 1px),
+          #d9ffe0 calc(50% + 1px),
+          #d9ffe0 100%
+        );
+        border-left-color: #ffb7b4;
       }
     }
   }
