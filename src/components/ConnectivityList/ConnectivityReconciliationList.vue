@@ -21,22 +21,6 @@
       </template>
     </el-popover>
 
-    <!-- Legends: SCKAN vs Map -->
-    <div class="legends">
-      <span class="legend-item">
-        <span class="legend-color differ"></span>
-        SCKAN feature maps differently on Map
-      </span>
-      <span class="legend-item">
-        <span class="legend-color unavailable"></span>
-        SCKAN feature unavailable on Map
-      </span>
-      <span class="legend-item">
-        <span class="legend-color mapped"></span>
-        SCKAN feature available on Map
-      </span>
-    </div>
-
     <!-- Origins Reconciliation Table -->
     <div v-if="origins && originsCombinations.length > 0" class="block">
       <div class="attribute-title-container">
@@ -545,49 +529,4 @@ export default {
   border: 1px solid var(--el-color-warning);
 }
 
-.legends {
-  display: flex;
-  flex-direction: column;
-  gap: 0.5rem;
-
-  .legend-item {
-    display: flex;
-    align-items: center;
-    gap: 0.25rem;
-    font-size: 12px;
-    line-height: 1;
-    color: var(--el-text-color-secondary);
-
-    .legend-color {
-      display: inline-block;
-      width: 12px;
-      height: 12px;
-      margin-top: -1px;
-      border-left: 2px solid;
-
-      &.mapped {
-        background-color: #d9ffe0;
-			  border-left-color: #7fe09c;
-      }
-
-      &.unavailable {
-        background-color: #ffe5e3;
-			  border-left-color: #ffb7b4;
-      }
-
-      &.differ {
-        background: linear-gradient(
-          90deg,
-          #ffe5e3 0%,
-          #ffe5e3 calc(50% - 1px),
-          #7fe09c calc(50% - 1px),
-          #7fe09c calc(50% + 1px),
-          #d9ffe0 calc(50% + 1px),
-          #d9ffe0 100%
-        );
-        border-left-color: #ffb7b4;
-      }
-    }
-  }
-}
 </style>
