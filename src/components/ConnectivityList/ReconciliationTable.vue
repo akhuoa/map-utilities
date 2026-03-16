@@ -208,13 +208,13 @@ export default {
 	// Direct match merged cell styling (one-to-one exact match)
 	&.direct-match-cell {
     &::before {
-			background-color: #e6ffed; // #e3f2fd;
-			border-left: 4px solid #aceebb; // #90caf9;
+			background-color: rgba($app-primary-color, 0.04);
+			border-left: 4px solid rgba($app-primary-color, 0.16);
 		}
 
 		&:hover::before {
-			background-color: #d9ffe0; // #bbdefb;
-			border-left-color: #7fe09c; // #64b5f6;
+			background-color: rgba($app-primary-color, 0.07);
+			border-left-color: rgba($app-primary-color, 0.24);
 		}
 	}
 
