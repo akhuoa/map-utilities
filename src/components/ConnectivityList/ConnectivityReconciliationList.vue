@@ -276,13 +276,23 @@ export default {
     },
   },
   methods: {
+    getCombinationSortLabel: function (combination) {
+      return (
+        combination?.sckanLabel ||
+        combination?.mapLabel ||
+        ''
+      ).toLowerCase()
+    },
     // Group combinations by mapId (or lack thereof)
     // Returns array of groups, each with items array
     groupCombinationsByMapId: function (combinations) {
       const groups = []
       const mapIdToGroup = new Map()
+      const sortedCombinations = [...combinations].sort((a, b) => {
+        return this.getCombinationSortLabel(a).localeCompare(this.getCombinationSortLabel(b))
+      })
 
-      combinations.forEach((combo) => {
+      sortedCombinations.forEach((combo) => {
         if (!combo.mapId || combo.mapId.length === 0) {
           // Unmapped items - each gets its own group (no grouping)
           groups.push({ items: [combo] })
