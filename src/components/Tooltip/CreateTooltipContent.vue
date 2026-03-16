@@ -4,7 +4,8 @@
       <div>{{ dialogTitle }}</div>
     </el-header>
     <el-main class="slides-block">
-      <span class="create-text" v-if="createData.editingIndex === -1 && targetRegion">
+      <span class="create-text"
+        v-if="creating && targetRegion">
         {{ `Primitives will be created in the ${targetRegion} region` }}
       </span>
       <el-row class="row" v-show="showPoint">
@@ -46,7 +47,7 @@
         <el-col :offset="0" :span="16">
           <el-autocomplete
             class="autocomplete-box"
-            :disabled="createData.editingIndex > -1"
+            :disabled="createData.editingIndex > -1 || createData.toBeDeleted"
             :fit-input-width="true"
             v-model="group"
             :placeholder="createData.shape"
@@ -173,15 +174,25 @@ export default {
         return "Edit";
       } else if (this.createData.renaming) {
         return "Rename";
+      } else if (this.createData.toBeDeleted) {
+        return "Delete";
       }
       return "Confirm";
     },
-    dialogTitle: function() {
-      if (this.createData.editingIndex > -1) {
-        return `Edit ${this.createData.shape}`;
-      } else {
-        return `Create ${this.createData.shape}`;
+    creating: function() {
+      if (this.createData.editingIndex > -1 ||
+        this.createData.renaming ||
+        this.createData.toBeDeleted) {
+        return false;
       }
+      return true;
+    },
+    dialogTitle: function() {
+      const mode = this.confirmText;
+      if (this.createData.toBeDeleted || this.createData.renaming) {
+        return mode;
+      }
+      return `${mode} ${this.createData.shape}`;
     },
     targetRegion: function() {
       if ('regionPrefix' in this.createData) {
@@ -207,6 +218,7 @@ export default {
           shape: this.createData.shape,
           editingIndex: this.createData.editingIndex,
           renaming: this.createData.renaming,
+          deleting: this.createData.toBeDeleted,
         }
       );
       this.group = this.createData.shape;
