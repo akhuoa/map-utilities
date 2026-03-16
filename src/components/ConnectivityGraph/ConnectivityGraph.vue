@@ -171,6 +171,8 @@ export default {
       loading: true,
       loadingError: '',
       connectivityGraph: null,
+      resizeObserver: null,
+      resizeAnimationFrame: null,
       selectedSource: '',
       availableSources: [],
       pathList: [],
@@ -198,11 +200,46 @@ export default {
   mounted() {
     this.showSpinner();
     this.updateTooltipContainer();
+    this.setupResizeObserver();
     this.refreshCache();
     this.loadCacheData();
     this.start();
   },
+  beforeUnmount() {
+    this.teardownResizeObserver();
+    this.connectivityGraph?.clearConnectivity();
+  },
   methods: {
+    setupResizeObserver: function () {
+      const target = this.$refs.connectivityGraphRef;
+
+      if (!target || typeof ResizeObserver === 'undefined') {
+        return;
+      }
+
+      this.resizeObserver = new ResizeObserver(() => {
+        if (this.resizeAnimationFrame) {
+          cancelAnimationFrame(this.resizeAnimationFrame);
+        }
+
+        this.resizeAnimationFrame = requestAnimationFrame(() => {
+          this.connectivityGraph?.resize();
+        });
+      });
+
+      this.resizeObserver.observe(target);
+    },
+    teardownResizeObserver: function () {
+      if (this.resizeAnimationFrame) {
+        cancelAnimationFrame(this.resizeAnimationFrame);
+        this.resizeAnimationFrame = null;
+      }
+
+      if (this.resizeObserver) {
+        this.resizeObserver.disconnect();
+        this.resizeObserver = null;
+      }
+    },
     updateTooltipContainer: function () {
       this.connectivityGraphContainer = this.$refs.connectivityGraphRef;
     },
@@ -491,13 +528,13 @@ export default {
       this.loading = false;
     },
     reset: function () {
-      this.connectivityGraph.reset();
+      this.connectivityGraph?.reset();
     },
     zoomIn: function () {
-      this.connectivityGraph.zoom(ZOOM_INCREMENT);
+      this.connectivityGraph?.zoom(ZOOM_INCREMENT);
     },
     zoomOut: function () {
-      this.connectivityGraph.zoom(-ZOOM_INCREMENT);
+      this.connectivityGraph?.zoom(-ZOOM_INCREMENT);
     },
     /**
      * Enable/disable user zoom for scrolling
@@ -505,7 +542,7 @@ export default {
     toggleZoom: function () {
       this.zoomEnabled = !this.zoomEnabled;
       this.zoomLockLabel = this.zoomEnabled ? ZOOM_UNLOCK_LABEL : ZOOM_LOCK_LABEL;
-      this.connectivityGraph.enableZoom(!this.zoomEnabled);
+      this.connectivityGraph?.enableZoom(!this.zoomEnabled);
     }
   },
 };

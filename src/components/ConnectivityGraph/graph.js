@@ -168,9 +168,9 @@ export class ConnectivityGraph extends EventTarget
     clearConnectivity()
     //=================
     {
-        if (this.cyg?.cy) {
-            this.cyg.cy.remove()
-            this.cyg.cy = null
+        if (this.cyg) {
+            this.cyg.remove()
+            this.cyg = null
         }
     }
 
@@ -178,7 +178,15 @@ export class ConnectivityGraph extends EventTarget
     //=====
     {
         if (this.cyg?.cy) {
-            this.cyg.cy.reset()
+            this.cyg.resetView()
+        }
+    }
+
+    resize()
+    //======
+    {
+        if (this.cyg?.cy) {
+            this.cyg.resize()
         }
     }
 
@@ -283,6 +291,7 @@ export class ConnectivityGraph extends EventTarget
 
 const APP_PRIMARY_COLOR = '#8300bf'
 const BG_COLOR = '#f3ecf6'
+const GRAPH_PADDING = 40
 const GRAPH_STYLE = [
     {
         'selector': 'node',
@@ -400,21 +409,26 @@ class CytoscapeGraph extends EventTarget
 {
     cy
     tooltip
+    layoutOptions
 
     constructor(connectivityGraph, graphCanvas)
     {
         super()
+        this.layoutOptions = {
+            name: 'dagre',
+            nodeSep: 150,
+            edgeSep: 50,
+            rankSep: 100,
+            rankDir: 'TB',
+            roots: connectivityGraph.roots.length ? connectivityGraph.roots : undefined,
+            fit: true,
+            padding: GRAPH_PADDING,
+            animate: false,
+        }
         this.cy = cytoscape({
             container: graphCanvas,
             elements: connectivityGraph.elements,
-            layout: {
-                name: 'dagre',
-                nodeSep: 150,
-                edgeSep: 50,
-                rankSep: 100,
-                rankDir: 'TB',
-                roots: connectivityGraph.roots.length ? connectivityGraph.roots : undefined,
-            },
+            layout: this.layoutOptions,
             style: GRAPH_STYLE,
             minZoom: 0.1,
             maxZoom: 10,
@@ -435,6 +449,35 @@ class CytoscapeGraph extends EventTarget
         if (this.cy) {
             this.cy.destroy()
         }
+    }
+
+    resetView()
+    //=========
+    {
+        if (!this.cy) {
+            return
+        }
+
+        this.cy.layout(this.layoutOptions).run()
+
+        const elements = this.cy.elements()
+        if (elements.length) {
+            this.cy.fit(elements, GRAPH_PADDING)
+            this.cy.center(elements)
+        } else {
+            this.cy.reset()
+        }
+    }
+
+    resize()
+    //======
+    {
+        if (!this.cy) {
+            return
+        }
+
+        this.cy.resize()
+        this.resetView()
     }
 
     checkRightBoundary(leftPos)
