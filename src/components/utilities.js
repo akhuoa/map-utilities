@@ -54,9 +54,17 @@ const delay = (ms) => {
   return new Promise(resolve => setTimeout(resolve, ms));
 };
 
+const removeDuplicates = function (arrayOfAnything) {
+  if (!arrayOfAnything) return []
+  return [...new Set(arrayOfAnything.map((e) => JSON.stringify(e)))].map((e) =>
+    JSON.parse(e)
+  )
+}
+
 export {
   capitalise,
   titleCase,
   xmlToJSON,
   delay,
+  removeDuplicates,
 };
