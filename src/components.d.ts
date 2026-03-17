@@ -14,6 +14,7 @@ declare module 'vue' {
     CopyToClipboard: typeof import('./components/CopyToClipboard/CopyToClipboard.vue')['default']
     CreateTooltipContent: typeof import('./components/Tooltip/CreateTooltipContent.vue')['default']
     DrawToolbar: typeof import('./components/DrawToolbar/DrawToolbar.vue')['default']
+    ElAutocomplete: typeof import('element-plus/es')['ElAutocomplete']
     ElButton: typeof import('element-plus/es')['ElButton']
     ElCard: typeof import('element-plus/es')['ElCard']
     ElCol: typeof import('element-plus/es')['ElCol']

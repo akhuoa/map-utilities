@@ -1,11 +1,12 @@
 <template>
   <el-container class="create-container">
     <el-header height="30px" class="header">
-      <div>Create {{ createData.shape }}</div>
+      <div>{{ dialogTitle }}</div>
     </el-header>
     <el-main class="slides-block">
-      <span class="create-text">
-        Primitives will be created in the __annotation region
+      <span class="create-text"
+        v-if="creating && targetRegion">
+        {{ `Primitives will be created in the ${targetRegion} region` }}
       </span>
       <el-row class="row" v-show="showPoint">
         <el-col :offset="0" :span="8">
@@ -22,11 +23,21 @@
           Region:
         </el-col>
         <el-col :offset="0" :span="16">
-          <el-input
+          <el-autocomplete
+            class="autocomplete-box"
+            :fit-input-width="true"
             v-model="region"
-            placeholder="__annotation"
-            size="small"
-          />
+            :placeholder="targetRegion"
+            :fetch-suggestions="fetchRegionSuggestions"
+            :teleported="true"
+            popper-class="autocomplete-popper"
+          >
+            <template #default="{ item }">
+              <div class="suggested-value">
+                {{ item.value }}
+              </div>
+            </template>
+          </el-autocomplete>
         </el-col>
       </el-row>
       <el-row class="row">
@@ -34,12 +45,28 @@
           Group:
         </el-col>
         <el-col :offset="0" :span="16">
-          <el-input
+          <el-autocomplete
+            class="autocomplete-box"
+            :disabled="createData.editingIndex > -1 || createData.toBeDeleted"
+            :fit-input-width="true"
             v-model="group"
             :placeholder="createData.shape"
-            size="small"
-          />
+            :fetch-suggestions="fetchGroupSuggestions"
+            :teleported="true"
+            popper-class="autocomplete-popper"
+          >
+            <template #default="{ item }">
+              <div class="suggested-value">
+                {{ item.value }}
+              </div>
+            </template>
+          </el-autocomplete>
         </el-col>
+      </el-row>
+      <el-row v-if="!canBeConfirmed" class="row">
+        <div class="warning-message">
+          Group must be enterd before this action can be confirmed.
+        </div>
       </el-row>
       <el-row>
         <el-col :offset="0" :span="12">
@@ -47,6 +74,7 @@
             type="primary"
             plain
             @click="confirm"
+            :disabled="!canBeConfirmed"
           >
             {{ confirmText }}
           </el-button>
@@ -67,8 +95,8 @@
 
 <script>
 /* eslint-disable no-alert, no-console */
-
 import {
+  ElAutocomplete as Autocomplete,
   ElButton as Button,
   ElCol as Col,
   ElContainer as Container,
@@ -84,6 +112,7 @@ import {
 export default {
   name: "CreateTooltipContent",
   components: {
+    Autocomplete,
     Button,
     Col,
     Container,
@@ -94,25 +123,82 @@ export default {
   props: {
     createData: {
       type: Object,
+      default:{
+        drawingBox: false,
+        renaming: false,
+        toBeConfirmed: false,
+        points: [],
+        tempGroupName: undefined,
+        shape: "",
+        x: 0,
+        y: 0,
+        editingIndex: -1,
+        faceIndex: -1,
+        toBeDeleted: false,
+        regionPrefix: "__annotation"
+      },
     },
   },
   watch: {
     "createData.shape": {
       handler: function (newValue, oldValue) {
-        this.group = newValue;
+        this.group = (this.createData.tempGroupName) ? this.createData.tempGroupName : "";
         if (oldValue !== undefined) {
           this.$emit("cancel-create");
         }
       },
       immediate: true,
     },
+    "createData.tempGroupName": {
+      handler: function (newValue) {
+        this.group = newValue ? newValue : "";
+      },
+      immediate: true,
+    },
   },
   computed: {
+    canBeConfirmed: function() {
+      if (this.createData.editingIndex > -1) {
+        return true;
+      } else if (this.group) {
+        if (!this.renaming) {
+          return true;
+        } else if (this.group !== this.createData.tempGroupName) {
+          return true;
+        }
+      }
+      return false;
+    },
     confirmText: function () {
       if (this.createData.editingIndex > -1) {
         return "Edit";
+      } else if (this.createData.renaming) {
+        return "Rename";
+      } else if (this.createData.toBeDeleted) {
+        return "Delete";
       }
       return "Confirm";
+    },
+    creating: function() {
+      if (this.createData.editingIndex > -1 ||
+        this.createData.renaming ||
+        this.createData.toBeDeleted) {
+        return false;
+      }
+      return true;
+    },
+    dialogTitle: function() {
+      const mode = this.confirmText;
+      if (this.createData.toBeDeleted || this.createData.renaming) {
+        return mode;
+      }
+      return `${mode} ${this.createData.shape}`;
+    },
+    targetRegion: function() {
+      if ('regionPrefix' in this.createData) {
+        return this.createData.regionPrefix;
+      }
+      return "";
     },
   },
   data: function () {
@@ -125,18 +211,28 @@ export default {
   methods: {
     confirm: function () {
       this.$emit(
-        "confirm-create", 
-        { 
-          region: "__annotation/" + this.region, 
+        "confirm-create",
+        {
+          region: this.targetRegion + this.region,
           group: this.group,
           shape: this.createData.shape,
           editingIndex: this.createData.editingIndex,
+          renaming: this.createData.renaming,
+          deleting: this.createData.toBeDeleted,
         }
       );
       this.group = this.createData.shape;
     },
     cancel: function () {
       this.$emit("cancel-create");
+    },
+    fetchRegionSuggestions: function(term, cb) {
+      cb([]);
+      this.$emit("create-region-suggestions", {term, cb});
+    },
+    fetchGroupSuggestions: function(term, cb) {
+      cb([]);
+      this.$emit("create-group-suggestions", {term, cb, region: this.region});
     },
   },
 };
@@ -152,20 +248,20 @@ export default {
   font-size: 14px;
 }
 
+:deep(.create-text) {
+  max-width: 220px;
+  height: 35px;
+  font-size: 12px;
+}
+
 .row {
   margin: 4px;
   text-align: left;
 }
 
-:deep(.create-text) {
-  max-width: 220px;
-  height:35px;
-  font-size: 12px;
-}
-
-
 .create-container {
-  width: 100%;
+  width: 320px;
+
   height: auto;
   border-radius: 4px;
   border: solid 1px #d8dce6;
@@ -175,27 +271,44 @@ export default {
   pointer-events: auto;
 }
 
+:deep(.autocomplete-box) {
+  position: relative;
+  font-size: 12px;
+  display: inline-flex;
+  width: var(--el-input-width);
+  line-height: var(--el-input-height);
+  box-sizing: border-box;
+  vertical-align: middle;
+  .el-input__inner {
+    height: 24px;
+  }
+}
+
+.autocomplete-popper {
+  li {
+    line-height: normal;
+    padding: 7px;
+
+    .suggested-value {
+      font-family: "Asap", sans-serif;
+      text-align: left;
+      white-space: initial;
+    }
+
+    .el-input__inner {
+      font-size: 12px;
+    }
+  }
+}
+
+.warning-message {
+  font-size: 10px;
+  color: #FF8400;
+}
+
 .value {
   font-size: 12px;
 }
 
-.input-box {
-  width: 42px;
-  border-radius: 4px;
-  border: 1px solid rgb(144, 147, 153);
-  background-color: var(--white);
-  font-weight: 500;
-  color: rgb(48, 49, 51);
-  margin-left: 8px;
-  height: 24px;
-
-  &.number-input {
-    width: 42px;
-    :deep(.el-input__wrapper) {
-      padding-left: 0px;
-      padding-right: 0px;
-    }
-  }
-}
 
 </style>
