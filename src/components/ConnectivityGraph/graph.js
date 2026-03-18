@@ -77,6 +77,7 @@ export class ConnectivityGraph extends EventTarget
     hasPhenotypes = false
     unavailableNodeIds = new Set()
     termOverrides = new Map()
+    termLabels = new Map()
 
     constructor(labelCache, graphCanvas, options={})
     {
@@ -89,6 +90,9 @@ export class ConnectivityGraph extends EventTarget
         this.termOverrides = options.termOverrides instanceof Map
             ? options.termOverrides
             : new Map(Object.entries(options.termOverrides || {}));
+        this.termLabels = options.termLabels instanceof Map
+            ? options.termLabels
+            : new Map(Object.entries(options.termLabels || {}));
     }
 
     async addConnectivity(knowledge)
@@ -101,10 +105,10 @@ export class ConnectivityGraph extends EventTarget
             const source = []
             const destination = []
             sourceKey.forEach((key)=>{
-            source.push(...knowledge["node-phenotypes"][key])
+              source.push(...knowledge["node-phenotypes"][key])
             })
             destinationKey.forEach((key)=>{
-            destination.push(...knowledge["node-phenotypes"][key])
+              destination.push(...knowledge["node-phenotypes"][key])
             })
             const via = findComponents(knowledge, source, destination)
             this.dendrites = source.map(node => JSON.stringify(node))
@@ -267,7 +271,9 @@ export class ConnectivityGraph extends EventTarget
             if (!seenIds.has(displayTerm)) {
                 seenIds.add(displayTerm)
                 const override = this.termOverrides.get(term)
-                const humanLabel = override?.label || (this.labelCache.has(displayTerm) ? this.labelCache.get(displayTerm) : '')
+                const humanLabel = override?.label
+                    || (this.termLabels.has(displayTerm) ? this.termLabels.get(displayTerm) : '')
+                    || (this.labelCache.has(displayTerm) ? this.labelCache.get(displayTerm) : '')
                 uniqueTermPairs.push({ id: displayTerm, humanLabel })
             }
         })
@@ -288,7 +294,9 @@ export class ConnectivityGraph extends EventTarget
                 return
             }
 
-            const sourceLabel = this.labelCache.has(term) ? this.labelCache.get(term) : term
+            const sourceLabel = this.termLabels.has(term)
+                ? this.termLabels.get(term)
+                : (this.labelCache.has(term) ? this.labelCache.get(term) : term)
             mappedFrom.push({
                 sourceId: term,
                 sourceLabel,

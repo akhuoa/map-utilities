@@ -166,6 +166,30 @@ export default {
       type: Object,
       default: () => {},
     },
+    origins: {
+      type: Array,
+      default: () => []
+    },
+    components: {
+      type: Array,
+      default: () => []
+    },
+    destinations: {
+      type: Array,
+      default: () => []
+    },
+    originsWithDatasets: {
+      type: Array,
+      default: () => []
+    },
+    componentsWithDatasets: {
+      type: Array,
+      default: () => []
+    },
+    destinationsWithDatasets: {
+      type: Array,
+      default: () => []
+    },
     hasSingleConnectivityList: {
       type: Boolean,
       default: false,
@@ -189,6 +213,9 @@ export default {
     },
     mappedTermOverridesKey: function () {
       return JSON.stringify(this.getMappedTermOverrides());
+    },
+    termLabelsKey: function () {
+      return JSON.stringify(this.getTermLabels());
     },
   },
   data: function () {
@@ -226,6 +253,11 @@ export default {
       }
     },
     mappedTermOverridesKey: function (newVal, oldVal) {
+      if (newVal !== oldVal) {
+        this.restartGraph();
+      }
+    },
+    termLabelsKey: function (newVal, oldVal) {
       if (newVal !== oldVal) {
         this.restartGraph();
       }
@@ -402,6 +434,7 @@ export default {
       this.connectivityGraph = new ConnectivityGraph(this.labelCache, graphCanvas, {
         unavailableNodeIds: this.getUnavailableNodeIds(),
         termOverrides: this.getMappedTermOverrides(),
+        termLabels: this.getTermLabels(),
       });
       const connectivityInfo = this.knowledgeByPath.get(neuronPath);
 
@@ -627,6 +660,48 @@ export default {
       });
 
       return mappedTermOverrides;
+    },
+    getTermLabels: function () {
+      const termLabels = {};
+      const combinations = [
+        ...this.originsCombinations,
+        ...this.componentsCombinations,
+        ...this.destinationsCombinations,
+      ];
+
+      combinations.forEach((combination) => {
+        const sckanLabel = combination?.sckanLabel;
+        const mapLabel = combination?.mapLabel;
+
+        if (sckanLabel) {
+          this.flattenCombinationIds(combination?.sckanId).forEach((id) => {
+            if (id) {
+              termLabels[id] = sckanLabel;
+            }
+          });
+        }
+
+        if (mapLabel) {
+          this.flattenCombinationIds(combination?.mapId).forEach((id) => {
+            if (id) {
+              termLabels[id] = mapLabel;
+            }
+          });
+        }
+      });
+
+      const withDatasets = [
+        ...this.originsWithDatasets,
+        ...this.componentsWithDatasets,
+        ...this.destinationsWithDatasets,
+      ];
+      withDatasets.forEach((item) => {
+        if (item?.id && item?.name && !termLabels[item.id]) {
+          termLabels[item.id] = item.name;
+        }
+      });
+
+      return termLabels;
     },
     restartGraph: function () {
       if (!this.$refs.graphCanvas) {
