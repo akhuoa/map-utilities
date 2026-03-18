@@ -1,3 +1,5 @@
+import { removeDuplicates } from '../utilities';
+
 /**
  * @private
  * Competency Queries
@@ -26,6 +28,56 @@ async function _postRequest(API_URL, payload) {
     console.error("Request failed:", error);
     throw error;
   }
+}
+
+/**
+ * CQ query 27: Single Connectivity List
+ * This query is available for the new SCKAN knowledge source "sckan-2026-02-11".
+ * The legacy maps don't have node-mappings.
+ * @param {*} flatmapAPI
+ * @param {*} knowledgeSource mapuuid
+ * @param {*} pathId
+ * @returns combined connectivity list
+ */
+async function querySingleConnectivityList(flatmapAPI, knowledgeSource, pathId) {
+  const data = await competencyQuery({
+    flatmapAPI: flatmapAPI,
+    knowledgeSource: knowledgeSource,
+    queryId: 27,
+    parameters: [
+      {
+        column: 'path_id',
+        value: pathId
+      },
+    ]
+  });
+
+  if (data?.results?.values) {
+    const connectivityList = data.results.values.map((value) => {
+      // value => [
+      // "sckan_id",
+      // "path_id",
+      // "sckan_node_id",
+      // "sckan_node_label",
+      // "source_id", // mapuuid
+      // "node_id", // map node id
+      // "node_label" // map node label
+      // ]
+      return {
+        sckanId: value[0],
+        mapUUID: value[4],
+        pathId: value[1],
+        sckanNodeId: value[2] ? JSON.parse(value[2]) : [],
+        sckanNodeLabel: value[3] || "",
+        mapNodeId: value[5] ? JSON.parse(value[5]) : [],
+        mapNodeLabel: value[6] || "",
+      };
+    });
+    // remove duplicates
+    return removeDuplicates(connectivityList);
+  }
+
+  return [];
 }
 
 /**
@@ -392,4 +444,5 @@ export {
   queryPathsByDestination,
   queryPathsByRoute,
   queryForwardBackwardConnections,
+  querySingleConnectivityList,
 };

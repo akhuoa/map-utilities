@@ -2,6 +2,7 @@ import AnnotationPopup from "./Tooltip/AnnotationPopup.vue";
 import CreateTooltipContent from "./Tooltip/CreateTooltipContent.vue";
 import ConnectivityGraph from "./ConnectivityGraph/ConnectivityGraph.vue";
 import ConnectivityList from "./ConnectivityList/ConnectivityList.vue";
+import ConnectivityReconciliationList from "./ConnectivityList/ConnectivityReconciliationList.vue";
 import CopyToClipboard from "./CopyToClipboard/CopyToClipboard.vue";
 import DrawToolbar from "./DrawToolbar/DrawToolbar.vue";
 import HelpModeDialog from "./HelpModeDialog/HelpModeDialog.vue";
@@ -16,6 +17,7 @@ import {
   queryPathsByDestination,
   queryPathsByRoute,
   queryForwardBackwardConnections,
+  querySingleConnectivityList,
 } from "./CompetencyQueries/CompetencyQueries.js";
 import {
   filterOrigins,
@@ -37,6 +39,7 @@ export {
   CreateTooltipContent,
   ConnectivityGraph,
   ConnectivityList,
+  ConnectivityReconciliationList,
   CopyToClipboard,
   DrawToolbar,
   HelpModeDialog,
@@ -50,6 +53,7 @@ export {
   queryPathsByDestination,
   queryPathsByRoute,
   queryForwardBackwardConnections,
+  querySingleConnectivityList,
   filterOrigins,
   filterDestinations,
   filterViaLocations,

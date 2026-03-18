@@ -1,32 +1,35 @@
 <template>
   <div ref="connectivityList" class="connectivity-list">
+    <!-- Error Popover -->
     <el-popover
       width="250"
       :show-arrow="false"
       trigger="manual"
-      :teleported="false"
-      placement="left-start"
-      :visible="(connectivityError.errorConnectivities ? true: false)"
-      popper-class="connectivity-error-container"
+      :teleported="true"
+      :append-to="connectivityListContainer"
+      placement="bottom-start"
+      :visible="connectivityError.hasError && !!connectivityError.errorMessage"
+      :popper-class="connectivityError.errorType === 'warning' ? 'connectivity-warning-container' : 'connectivity-error-container'"
     >
       <template #reference>
         <div class="connectivity-alert"
-          :style="{ top: alertTop + 'px' }">
+          :style="{ top: alertTop + 'px', left: alertLeft + 'px' }">
         </div>
       </template>
       <template #default>
-        <strong>{{ connectivityError.errorConnectivities }}</strong>
-        {{ connectivityError.errorMessage }}
+        <span v-html="connectivityError.errorMessage"></span>
       </template>
     </el-popover>
-    {{ entry.paths }}
-    <div v-if="origins && origins.length > 0" class="block">
+
+    <!-- Origins Reconciliation Table -->
+    <div v-if="origins && originsCombinations.length > 0" class="block">
       <div class="attribute-title-container">
         <span class="attribute-title">Origin</span>
         <el-popover
           width="250"
           trigger="hover"
-          :teleported="false"
+          :teleported="true"
+          :append-to="connectivityListContainer"
           popper-class="popover-origin-help"
         >
           <template #reference>
@@ -37,33 +40,15 @@
           </span>
         </el-popover>
       </div>
-      <div
-        v-for="(origin, i) in origins"
-        class="attribute-content"
-        :origin-item-label="origin"
-        :key="origin"
-        @mouseenter="onConnectivityHovered(origin, $event)"
-        @mouseleave="onConnectivityHovered()"
-      >
-        <el-popover
-          width="150"
-          trigger="hover"
-          :teleported="false"
-          popper-class="popover-origin-help"
-        >
-          <template #reference>
-            <el-icon
-              class="magnify-glass"
-              v-show="shouldShowMagnifyGlass(origin,)"
-              @click="onConnectivityClicked(origin)"
-            >
-              <el-icon-search />
-            </el-icon>
-          </template>
-          <span>Search connectivity</span>
-        </el-popover>
-        <span>{{ capitalise(origin) }}</span>
-      </div>
+
+      <ReconciliationTable
+        table-key="origin"
+        :groups="groupedOrigins"
+        :connectivity-list-container="connectivityListContainer"
+        @row-hovered="onRowHovered"
+        @connectivity-clicked="onConnectivityClicked"
+      />
+
       <el-button
         v-show="
           originsWithDatasets && originsWithDatasets.length > 0 &&
@@ -76,43 +61,28 @@
         Explore origin data
       </el-button>
     </div>
+
+    <!-- Components Reconciliation Table -->
     <div
-      v-if="components && components.length > 0"
+      v-if="components && componentsCombinations.length > 0"
       class="block"
     >
       <div class="attribute-title-container">
         <span class="attribute-title">Components</span>
       </div>
-      <div
-        v-for="(component, i) in components"
-        class="attribute-content"
-        :component-item-label="component"
-        :key="component"
-        @mouseenter="onConnectivityHovered(component, $event)"
-        @mouseleave="onConnectivityHovered()"
-      >
-        <el-popover
-          width="150"
-          trigger="hover"
-          :teleported="false"
-          popper-class="popover-origin-help"
-        >
-          <template #reference>
-            <el-icon
-              class="magnify-glass"
-              v-show="shouldShowMagnifyGlass(component)"
-              @click="onConnectivityClicked(component)"
-            >
-              <el-icon-search />
-            </el-icon>
-          </template>
-          <span>Search connectivity</span>
-        </el-popover>
-        <span>{{ capitalise(component) }}</span>
-      </div>
+
+      <ReconciliationTable
+        table-key="component"
+        :groups="groupedComponents"
+        :connectivity-list-container="connectivityListContainer"
+        @row-hovered="onRowHovered"
+        @connectivity-clicked="onConnectivityClicked"
+      />
     </div>
+
+    <!-- Destinations Reconciliation Table -->
     <div
-      v-if="destinations && destinations.length > 0"
+      v-if="destinations && destinationsCombinations.length > 0"
       class="block"
     >
       <div class="attribute-title-container">
@@ -120,7 +90,8 @@
         <el-popover
           width="250"
           trigger="hover"
-          :teleported="false"
+          :teleported="true"
+          :append-to="connectivityListContainer"
           popper-class="popover-origin-help"
         >
           <template #reference>
@@ -131,33 +102,15 @@
           </span>
         </el-popover>
       </div>
-      <div
-        v-for="(destination, i) in destinations"
-        class="attribute-content"
-        :destination-item-label="destination"
-        :key="destination"
-        @mouseenter="onConnectivityHovered(destination, $event)"
-        @mouseleave="onConnectivityHovered()"
-      >
-        <el-popover
-          width="150"
-          trigger="hover"
-          :teleported="false"
-          popper-class="popover-origin-help"
-        >
-          <template #reference>
-            <el-icon
-              class="magnify-glass"
-              v-show="shouldShowMagnifyGlass(destination)"
-              @click="onConnectivityClicked(destination)"
-            >
-              <el-icon-search />
-            </el-icon>
-          </template>
-          <span>Search connectivity</span>
-        </el-popover>
-        <span>{{ capitalise(destination) }}</span>
-      </div>
+
+      <ReconciliationTable
+        table-key="destination"
+        :groups="groupedDestinations"
+        :connectivity-list-container="connectivityListContainer"
+        @row-hovered="onRowHovered"
+        @connectivity-clicked="onConnectivityClicked"
+      />
+
       <el-button
         v-show="
           destinationsWithDatasets &&
@@ -170,6 +123,8 @@
         Explore destination data
       </el-button>
     </div>
+
+    <!-- Explore Button -->
     <div
       v-show="
         componentsWithDatasets &&
@@ -189,26 +144,24 @@
 </template>
 
 <script>
-import { shallowRef } from 'vue';
 import {
   Warning as ElIconWarning,
-  Search as ElIconSearch,
 } from '@element-plus/icons-vue'
 import {
   ElButton as Button,
   ElContainer as Container,
   ElIcon as Icon,
 } from 'element-plus'
-import { capitalise } from '../utilities'
+import ReconciliationTable from './ReconciliationTable.vue'
 
 export default {
-  name: 'ConnectivityList',
+  name: 'ConnectivityReconciliationList',
   components: {
     Button,
     Container,
     Icon,
     ElIconWarning,
-    ElIconSearch
+    ReconciliationTable,
   },
   props: {
     entry: {
@@ -220,6 +173,9 @@ export default {
         destinationsWithDatasets: [],
         originsWithDatasets: [],
         componentsWithDatasets: [],
+        destinationsCombinations: [],
+        originsCombinations: [],
+        componentsCombinations: [],
         resource: undefined,
         featuresAlert: undefined,
       }),
@@ -248,6 +204,18 @@ export default {
       type: Array,
       default: () => []
     },
+    componentsCombinations: {
+      type: Array,
+      default: () => []
+    },
+    originsCombinations: {
+      type: Array,
+      default: () => []
+    },
+    destinationsCombinations: {
+      type: Array,
+      default: () => []
+    },
     availableAnatomyFacets: {
       type: Array,
       default: () => [],
@@ -260,11 +228,14 @@ export default {
   data: function () {
     return {
       alertTop: 0,
+      alertLeft: 0,
       originDescriptions: {
         motor: 'is the location of the initial cell body of the circuit',
         sensory: 'is the location of the initial cell body in the PNS circuit',
       },
       facetList: [],
+      clearErrorTimeout: null,
+      connectivityListContainer: null,
     }
   },
   watch: {
@@ -275,6 +246,9 @@ export default {
       immediate: true,
       deep: true,
     },
+  },
+  mounted: function () {
+    this.connectivityListContainer = this.$refs.connectivityList;
   },
   computed: {
     originDescription: function () {
@@ -288,15 +262,118 @@ export default {
         return this.originDescriptions.sensory
       }
     },
+    // Group origins by mapId - multiple SCKAN terms can map to the same Map term
+    groupedOrigins: function () {
+      return this.groupCombinationsByMapId(this.originsCombinations)
+    },
+    // Group components by mapId
+    groupedComponents: function () {
+      return this.groupCombinationsByMapId(this.componentsCombinations)
+    },
+    // Group destinations by mapId
+    groupedDestinations: function () {
+      return this.groupCombinationsByMapId(this.destinationsCombinations)
+    },
   },
   methods: {
-    capitalise: function (text) {
-      return capitalise(text)
+    getCombinationSortLabel: function (combination) {
+      return (
+        combination?.sckanLabel ||
+        combination?.mapLabel ||
+        ''
+      ).toLowerCase()
     },
-    onConnectivityHovered: function (name, ele) {
-      this.$emit('connectivity-hovered', name);
-      if (ele) {
-        this.alertTop = ele.srcElement.offsetParent.offsetTop + ele.srcElement.offsetTop;
+    // Group combinations by mapId (or lack thereof)
+    // Returns array of groups, each with items array
+    groupCombinationsByMapId: function (combinations) {
+      const groups = []
+      const mapIdToGroup = new Map()
+      const sortedCombinations = [...combinations].sort((a, b) => {
+        return this.getCombinationSortLabel(a).localeCompare(this.getCombinationSortLabel(b))
+      })
+
+      sortedCombinations.forEach((combo) => {
+        if (!combo.mapId || combo.mapId.length === 0) {
+          // Unmapped items - each gets its own group (no grouping)
+          groups.push({ items: [combo] })
+        } else {
+          const mapIdKey = JSON.stringify(combo.mapId)
+
+          if (!mapIdToGroup.has(mapIdKey)) {
+            const group = { items: [] }
+            mapIdToGroup.set(mapIdKey, group)
+            groups.push(group)
+          }
+
+          mapIdToGroup.get(mapIdKey).items.push(combo)
+        }
+      })
+
+      return groups
+    },
+    onRowHovered: function (combination, event, isMapIdHover = false) {
+      if (this.clearErrorTimeout) {
+        clearTimeout(this.clearErrorTimeout);
+        this.clearErrorTimeout = null;
+      }
+
+      // Compute the new error state first
+      let newError = { hasError: false, errorType: '', errorMessage: '' };
+
+      if (combination) {
+        if (combination.mapId && combination.mapId.length > 0) {
+          // If there is mapId, it exists on the map.
+          // Show hover highlight on the map.
+          const hoveredLabel = combination.mapLabel.toLowerCase();
+          this.$emit('connectivity-hovered', hoveredLabel);
+
+          // If the SCKAN term and the Map term are different, show warning message.
+          if (!isMapIdHover && JSON.stringify(combination.sckanId) !== JSON.stringify(combination.mapId)) {
+            newError = {
+              hasError: true,
+              errorType: 'warning',
+              errorMessage: `<strong>${combination.sckanLabel}</strong> from SCKAN
+                            has been mapped to <strong>${combination.mapLabel}</strong> on the Map.`,
+            };
+          }
+        } else if (combination.sckanId && combination.sckanId.length > 0) {
+          // If there is no mapId but there is sckanId,
+          // it means the SCKAN term is not available on the Map.
+          newError = {
+            hasError: true,
+            errorType: 'error',
+            errorMessage: `<strong>${combination.sckanLabel}</strong> from SCKAN
+                          is not available on the Map.`,
+          };
+        }
+      } else {
+        // Mouse leave - clear the hover highlight
+        this.$emit('connectivity-hovered', null);
+      }
+
+      if (newError.hasError) {
+        // Show new error immediately with content
+        this.connectivityError.errorType = newError.errorType;
+        this.connectivityError.errorMessage = newError.errorMessage;
+        this.connectivityError.hasError = true;
+      } else {
+        // Hide the popover immediately, then clear content after transition (~300ms)
+        // so the popover fades out with content still visible (not as empty box)
+        this.connectivityError.hasError = false;
+        this.clearErrorTimeout = setTimeout(() => {
+          this.connectivityError.errorType = '';
+          this.connectivityError.errorMessage = '';
+          this.clearErrorTimeout = null;
+        }, 350);
+      }
+
+      if (event) {
+        const element = event.currentTarget;
+        const rect = element.getBoundingClientRect();
+        const containerRect = this.$refs.connectivityList.getBoundingClientRect();
+
+        this.alertTop = rect.top - containerRect.top;
+        this.alertLeft = rect.left - containerRect.left + (rect.width / 2);
       }
     },
     onConnectivityClicked: function (name) {
@@ -367,7 +444,7 @@ export default {
 
 .button {
   margin-left: 0px !important;
-  margin-top: 0px !important;
+  margin-top: 0.5rem !important;
   font-size: 14px !important;
   background-color: $app-primary-color;
   color: #fff;
@@ -420,67 +497,46 @@ export default {
 .attribute-title {
   font-size: 16px;
   font-weight: 600;
-  /* font-weight: bold; */
   text-transform: uppercase;
-}
-
-.attribute-content {
-  font-size: 14px;
-  font-weight: 500;
-  transition: color 0.25s ease;
-  position: relative;
-  cursor: default;
-  padding-left: 16px;
-
-  .magnify-glass {
-    display: none;
-    position: absolute;
-    top: 0;
-    left: 0;
-  }
-
-  &:hover {
-    color: $app-primary-color;
-
-    .magnify-glass {
-      display: block;
-      padding-top: 4px;
-      cursor: pointer;
-    }
-  }
-
-  + .attribute-content {
-    &::before {
-      content: "";
-      width: 90%;
-      height: 1px;
-      background-color: var(--el-border-color);
-      position: absolute;
-      top: 0;
-      left: 0;
-    }
-  }
-
-  &:last-of-type {
-    margin-bottom: 0.5em;
-  }
 }
 
 .connectivity-alert {
   position: absolute;
   width: 1px;
-  right:0px;
+  height: 1px;
 }
 
-.connectivity-list :deep(.connectivity-error-container.el-popover) {
+.connectivity-list :deep(.connectivity-error-container.el-popover),
+.connectivity-list :deep(.connectivity-warning-container.el-popover) {
   min-height: 31px; // placeholder
   align-items: center;
   justify-content: center;
-  padding: 0.25rem 0.5rem;
-  background-color: var(--el-color-error-light-9);
+  padding: 0.5rem 0.75rem;
   border-radius: var(--el-border-radius-small);
-  border: 1px solid var(--el-color-error);
   pointer-events: none;
   word-break: break-word;
+  font-size: 12px;
 }
+
+.connectivity-list :deep(.connectivity-error-container.el-popover ul),
+.connectivity-list :deep(.connectivity-warning-container.el-popover ul) {
+  margin: 0.5em 0 0;
+  padding-left: 1.25em;
+}
+
+.connectivity-list :deep(.connectivity-error-container.el-popover li + li),
+.connectivity-list :deep(.connectivity-warning-container.el-popover li + li) {
+  margin-top: 0.25em;
+}
+
+.connectivity-list :deep(.connectivity-error-container.el-popover) {
+  background-color: var(--el-color-error-light-9);
+  border: 1px solid var(--el-color-error);
+}
+
+.connectivity-list :deep(.connectivity-warning-container.el-popover) {
+  background-color: var(--el-color-warning-light-9);
+  border: 1px solid var(--el-color-warning);
+}
+
 </style>
