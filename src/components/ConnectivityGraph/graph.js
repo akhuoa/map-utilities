@@ -258,15 +258,24 @@ export class ConnectivityGraph extends EventTarget
             const override = this.termOverrides.get(term)
             return override?.id || term
         })
-        const label = [...displayTerms]
-        const humanLabels = []
+
+        // Deduplicate: multiple SCKAN terms may resolve to the same Map term
+        const seenIds = new Set()
+        const uniqueTermPairs = []
         nodeTerms.forEach((term, index) => {
-            const override = this.termOverrides.get(term)
             const displayTerm = displayTerms[index]
-            const humanLabel = override?.label || (this.labelCache.has(displayTerm) ? this.labelCache.get(displayTerm) : '')
-            humanLabels.push(humanLabel)
+            if (!seenIds.has(displayTerm)) {
+                seenIds.add(displayTerm)
+                const override = this.termOverrides.get(term)
+                const humanLabel = override?.label || (this.labelCache.has(displayTerm) ? this.labelCache.get(displayTerm) : '')
+                uniqueTermPairs.push({ id: displayTerm, humanLabel })
+            }
         })
-        label.push(...humanLabels)
+
+        const label = [
+            ...uniqueTermPairs.map(p => p.id),
+            ...uniqueTermPairs.map(p => p.humanLabel),
+        ]
 
         const result = {
             id,
