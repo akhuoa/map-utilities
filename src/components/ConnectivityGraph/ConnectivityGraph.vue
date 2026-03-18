@@ -827,7 +827,6 @@ export default {
 
 :deep(.cy-graph-tooltip-line) {
   line-height: 1.35;
-  white-space: nowrap;
 }
 
 :deep(.cy-graph-tooltip-spacer) {
@@ -835,7 +834,6 @@ export default {
 }
 
 :deep(.cy-graph-tooltip-line.is-alias) {
-  font-weight: 600;
   font-style: italic;
   color: #6f6f6f;
 }
@@ -845,7 +843,6 @@ export default {
 }
 
 :deep(.cy-graph-tooltip-line.is-unavailable) {
-  font-weight: 600;
   font-style: italic;
   color: #6f6f6f;
 }
