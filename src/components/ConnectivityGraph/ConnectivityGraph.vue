@@ -110,7 +110,8 @@
       </div>
     </div>
 
-    <div v-show="connectivityError.errorConnectivities" class="connectivity-graph-error">
+    <!-- The error message shown in tooltip for single connectivity list view -->
+    <div v-show="!hasSingleConnectivityList && connectivityError.errorConnectivities" class="connectivity-graph-error">
       <strong>{{ connectivityError.errorConnectivities }}</strong>
       {{ connectivityError.errorMessage }}
     </div>
@@ -164,6 +165,10 @@ export default {
     connectivityError: {
       type: Object,
       default: () => {},
+    },
+    hasSingleConnectivityList: {
+      type: Boolean,
+      default: false,
     },
     destinationsCombinations: {
       type: Array,
