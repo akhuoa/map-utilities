@@ -272,6 +272,24 @@ export class ConnectivityGraph extends EventTarget
             id,
             label: label.join('\n')
         }
+        const mappedFrom = []
+        nodeTerms.forEach((term) => {
+            const override = this.termOverrides.get(term)
+            if (!override) {
+                return
+            }
+
+            const sourceLabel = this.labelCache.has(term) ? this.labelCache.get(term) : term
+            mappedFrom.push({
+                sourceId: term,
+                sourceLabel,
+                targetId: override.id,
+                targetLabel: override.label || sourceLabel,
+            })
+        })
+        if (mappedFrom.length) {
+            result['mappedFrom'] = removeDuplicateMappings(mappedFrom)
+        }
         const hasUnavailableTerm = nodeTerms.some(term => this.unavailableNodeIds.has(term))
         const hasMappedTerm = nodeTerms.some(term => this.termOverrides.has(term))
 
@@ -458,6 +476,21 @@ function areArraysIdentical(arr1, arr2) {
 
     return true
 }
+
+function removeDuplicateMappings(mappings) {
+    const seen = new Set()
+    const uniqueMappings = []
+
+    mappings.forEach((mapping) => {
+        const key = JSON.stringify(mapping)
+        if (!seen.has(key)) {
+            seen.add(key)
+            uniqueMappings.push(mapping)
+        }
+    })
+
+    return uniqueMappings
+}
 //==============================================================================
 
 class CytoscapeGraph extends EventTarget
@@ -553,6 +586,15 @@ class CytoscapeGraph extends EventTarget
         const labels = connectivityData.map((data) => (
             data.label + ' (' + data.id + ')'
         ))
+        const mappedFrom = data.mappedFrom || []
+
+        if (mappedFrom.length) {
+            labels.push('')
+            labels.push('SCKAN feature alias:')
+            mappedFrom.forEach((mapping) => {
+                labels.push(`${mapping.sourceLabel} (${mapping.sourceId}))`)
+            })
+        }
 
         this.tooltip.innerText = capitalizeLabels(labels.join('\n'))
         this.tooltip.style.left = `${event.renderedPosition.x}px`
