@@ -76,6 +76,7 @@ export class ConnectivityGraph extends EventTarget
     graphCanvas = null
     hasPhenotypes = false
     unavailableNodeIds = new Set()
+    termOverrides = new Map()
 
     constructor(labelCache, graphCanvas, options={})
     {
@@ -85,6 +86,9 @@ export class ConnectivityGraph extends EventTarget
         this.unavailableNodeIds = options.unavailableNodeIds instanceof Set
             ? options.unavailableNodeIds
             : new Set(options.unavailableNodeIds || []);
+        this.termOverrides = options.termOverrides instanceof Map
+            ? options.termOverrides
+            : new Map(Object.entries(options.termOverrides || {}));
     }
 
     async addConnectivity(knowledge)
@@ -250,20 +254,31 @@ export class ConnectivityGraph extends EventTarget
     {
         const id = JSON.stringify(node)
         const nodeTerms = [node[0], ...node[1]]
-        const label = [...nodeTerms]
+        const displayTerms = nodeTerms.map((term) => {
+            const override = this.termOverrides.get(term)
+            return override?.id || term
+        })
+        const label = [...displayTerms]
         const humanLabels = []
-        for (const term of label) {
-            const humanLabel = this.labelCache.has(term) ? this.labelCache.get(term) : ''
+        nodeTerms.forEach((term, index) => {
+            const override = this.termOverrides.get(term)
+            const displayTerm = displayTerms[index]
+            const humanLabel = override?.label || (this.labelCache.has(displayTerm) ? this.labelCache.get(displayTerm) : '')
             humanLabels.push(humanLabel)
-        }
+        })
         label.push(...humanLabels)
 
         const result = {
             id,
             label: label.join('\n')
         }
-        if (nodeTerms.some(term => this.unavailableNodeIds.has(term))) {
+        const hasUnavailableTerm = nodeTerms.some(term => this.unavailableNodeIds.has(term))
+        const hasMappedTerm = nodeTerms.some(term => this.termOverrides.has(term))
+
+        if (hasUnavailableTerm) {
             result['unavailable'] = true
+        } else if (hasMappedTerm) {
+            result['mapped'] = true
         }
         if (this.hasPhenotypes) {
             if (this.axons.includes(id)) {
@@ -301,6 +316,8 @@ const APP_PRIMARY_COLOR = '#8300bf'
 const BG_COLOR = '#f3ecf6'
 const UNAVAILABLE_BG_COLOR = '#ffe5e3'
 const UNAVAILABLE_BORDER_COLOR = '#ffb7b4'
+const MAPPED_BG_COLOR = '#d9ffe0'
+const MAPPED_BORDER_COLOR = '#aceebb'
 const GRAPH_PADDING = 40
 const GRAPH_STYLE = [
     {
@@ -352,6 +369,12 @@ const GRAPH_STYLE = [
         }
     },
     {
+        'selector': 'node[mapped]',
+        'style': {
+            'border-color': MAPPED_BORDER_COLOR,
+        }
+    },
+    {
         'selector': 'edge',
         'style': {
             'width': 1,
@@ -372,6 +395,14 @@ const GRAPH_STYLE = [
         'style': {
             'border-color': UNAVAILABLE_BORDER_COLOR,
             'background-color': UNAVAILABLE_BG_COLOR,
+            'background-opacity': 0.75,
+        }
+    },
+    {
+        'selector': 'node[mapped].active',
+        'style': {
+            'border-color': MAPPED_BORDER_COLOR,
+            'background-color': MAPPED_BG_COLOR,
             'background-opacity': 0.75,
         }
     }

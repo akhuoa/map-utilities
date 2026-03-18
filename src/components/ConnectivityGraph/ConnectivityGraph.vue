@@ -182,6 +182,9 @@ export default {
     unavailableNodeIdsKey: function () {
       return JSON.stringify(this.getUnavailableNodeIds());
     },
+    mappedTermOverridesKey: function () {
+      return JSON.stringify(this.getMappedTermOverrides());
+    },
   },
   data: function () {
     return {
@@ -213,6 +216,11 @@ export default {
       }
     },
     unavailableNodeIdsKey: function (newVal, oldVal) {
+      if (newVal !== oldVal) {
+        this.restartGraph();
+      }
+    },
+    mappedTermOverridesKey: function (newVal, oldVal) {
       if (newVal !== oldVal) {
         this.restartGraph();
       }
@@ -388,6 +396,7 @@ export default {
       this.connectivityGraph?.clearConnectivity();
       this.connectivityGraph = new ConnectivityGraph(this.labelCache, graphCanvas, {
         unavailableNodeIds: this.getUnavailableNodeIds(),
+        termOverrides: this.getMappedTermOverrides(),
       });
       const connectivityInfo = this.knowledgeByPath.get(neuronPath);
 
@@ -577,6 +586,42 @@ export default {
       });
 
       return [...unavailableNodeIds].sort();
+    },
+    getMappedTermOverrides: function () {
+      const mappedTermOverrides = {};
+      const combinations = [
+        ...this.originsCombinations,
+        ...this.componentsCombinations,
+        ...this.destinationsCombinations,
+      ];
+
+      combinations.forEach((combination) => {
+        if (!combination?.sckanId?.length || !combination?.mapId?.length || !combination?.mapLabel) {
+          return;
+        }
+
+        const isDirectMatch = JSON.stringify(combination.sckanId) === JSON.stringify(combination.mapId);
+        if (isDirectMatch) {
+          return;
+        }
+
+        const sckanIds = this.flattenCombinationIds(combination.sckanId);
+        const mapIds = this.flattenCombinationIds(combination.mapId);
+        const mapId = mapIds[0];
+
+        if (!mapId) {
+          return;
+        }
+
+        sckanIds.forEach((sckanId) => {
+          mappedTermOverrides[sckanId] = {
+            id: mapId,
+            label: combination.mapLabel,
+          };
+        });
+      });
+
+      return mappedTermOverrides;
     },
     restartGraph: function () {
       if (!this.$refs.graphCanvas) {
