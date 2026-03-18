@@ -451,6 +451,15 @@ function capitalizeLabels(input) {
     }).join('\n')
 }
 
+function escapeHtml(input) {
+    return String(input || '')
+        .replaceAll('&', '&amp;')
+        .replaceAll('<', '&lt;')
+        .replaceAll('>', '&gt;')
+        .replaceAll('"', '&quot;')
+        .replaceAll("'", '&#39;')
+}
+
 function getConnectivityData(label) {
     const labels = label ? label.split(`\n`) : []
     const connectivityData = []
@@ -592,26 +601,54 @@ class CytoscapeGraph extends EventTarget
         const data = node.data()
         const { label } = data
         const connectivityData = getConnectivityData(label)
-        const labels = connectivityData.map((data) => (
-            data.label + ' (' + data.id + ')'
-        ))
+        const tooltipLines = connectivityData.map((item) => ({
+            text: `${item.label} (${item.id})`,
+            type: 'default',
+        }))
         const mappedFrom = data.mappedFrom || []
         const isUnavailable = !!data.unavailable
+        const isMapped = !!data.mapped
 
         if (mappedFrom.length) {
-            labels.push('')
-            labels.push('SCKAN feature alias:')
+            tooltipLines.push({ text: '', type: 'spacer' })
+            tooltipLines.push({ text: 'SCKAN feature alias:', type: 'alias' })
             mappedFrom.forEach((mapping) => {
-                labels.push(`${mapping.sourceLabel} (${mapping.sourceId}))`)
+                tooltipLines.push({
+                    text: `${mapping.sourceLabel} (${mapping.sourceId})`,
+                    type: 'alias-source',
+                })
             })
         }
 
         if (isUnavailable) {
-            labels.push('')
-            labels.push('SCKAN feature unavailable on Map')
+          tooltipLines.unshift({ text: '', type: 'spacer' })
+          tooltipLines.unshift({ text: 'SCKAN feature unavailable on Map', type: 'unavailable' })
         }
 
-        this.tooltip.innerText = capitalizeLabels(labels.join('\n'))
+        const tooltipMarkup = tooltipLines.map((line) => {
+            if (line.type === 'spacer') {
+                return '<div class="cy-graph-tooltip-spacer"></div>'
+            }
+
+            const classes = ['cy-graph-tooltip-line']
+            if (line.type === 'alias') classes.push('is-alias')
+            if (line.type === 'alias-source') classes.push('is-alias-source')
+            if (line.type === 'unavailable') classes.push('is-unavailable')
+
+            return `<div class="${classes.join(' ')}">${escapeHtml(capitalizeLabels(line.text))}</div>`
+        }).join('')
+
+        this.tooltip.innerHTML = tooltipMarkup
+        this.tooltip.style.backgroundColor = isUnavailable
+            ? UNAVAILABLE_BG_COLOR
+            : isMapped
+                ? MAPPED_BG_COLOR
+                : BG_COLOR
+        this.tooltip.style.borderColor = isUnavailable
+            ? UNAVAILABLE_BORDER_COLOR
+            : isMapped
+                ? MAPPED_BORDER_COLOR
+                : APP_PRIMARY_COLOR
         this.tooltip.style.left = `${event.renderedPosition.x}px`
         this.tooltip.style.top = `${event.renderedPosition.y}px`
         this.tooltip.style.maxWidth = '240px'

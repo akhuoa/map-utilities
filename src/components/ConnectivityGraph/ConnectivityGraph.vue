@@ -814,7 +814,7 @@ export default {
   padding: 4px 10px;
   font-family: Asap;
   font-size: 12px;
-  background: #f3ecf6 !important;
+  background-color: #f3ecf6;
   border: 1px solid $app-primary-color;
   border-radius: var(--el-border-radius-base);
   box-shadow: 1px 1px 6px 1px rgba($app-primary-color, 0.15);
@@ -823,6 +823,31 @@ export default {
   left: 0;
   width: fit-content;
   z-index: 1;
+}
+
+:deep(.cy-graph-tooltip-line) {
+  line-height: 1.35;
+  white-space: nowrap;
+}
+
+:deep(.cy-graph-tooltip-spacer) {
+  height: 4px;
+}
+
+:deep(.cy-graph-tooltip-line.is-alias) {
+  font-weight: 600;
+  font-style: italic;
+  color: #6f6f6f;
+}
+
+:deep(.cy-graph-tooltip-line.is-alias-source) {
+  color: #4f4f4f;
+}
+
+:deep(.cy-graph-tooltip-line.is-unavailable) {
+  font-weight: 600;
+  font-style: italic;
+  color: #6f6f6f;
 }
 
 .connectivity-graph-error {
