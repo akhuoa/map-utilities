@@ -75,12 +75,16 @@ export class ConnectivityGraph extends EventTarget
     labelCache = new Map()
     graphCanvas = null
     hasPhenotypes = false
+    unavailableNodeIds = new Set()
 
-    constructor(labelCache, graphCanvas)
+    constructor(labelCache, graphCanvas, options={})
     {
         super()
         this.labelCache = labelCache;
         this.graphCanvas = graphCanvas;
+        this.unavailableNodeIds = options.unavailableNodeIds instanceof Set
+            ? options.unavailableNodeIds
+            : new Set(options.unavailableNodeIds || []);
     }
 
     async addConnectivity(knowledge)
@@ -245,7 +249,8 @@ export class ConnectivityGraph extends EventTarget
     //=======================================================
     {
         const id = JSON.stringify(node)
-        const label = [node[0], ...node[1]]
+        const nodeTerms = [node[0], ...node[1]]
+        const label = [...nodeTerms]
         const humanLabels = []
         for (const term of label) {
             const humanLabel = this.labelCache.has(term) ? this.labelCache.get(term) : ''
@@ -256,6 +261,9 @@ export class ConnectivityGraph extends EventTarget
         const result = {
             id,
             label: label.join('\n')
+        }
+        if (nodeTerms.some(term => this.unavailableNodeIds.has(term))) {
+            result['unavailable'] = true
         }
         if (this.hasPhenotypes) {
             if (this.axons.includes(id)) {
@@ -291,6 +299,8 @@ export class ConnectivityGraph extends EventTarget
 
 const APP_PRIMARY_COLOR = '#8300bf'
 const BG_COLOR = '#f3ecf6'
+const UNAVAILABLE_BG_COLOR = '#ffe5e3'
+const UNAVAILABLE_BORDER_COLOR = '#ffb7b4'
 const GRAPH_PADDING = 40
 const GRAPH_STYLE = [
     {
@@ -336,6 +346,12 @@ const GRAPH_STYLE = [
         }
     },
     {
+        'selector': 'node[unavailable]',
+        'style': {
+            'border-color': UNAVAILABLE_BORDER_COLOR,
+        }
+    },
+    {
         'selector': 'edge',
         'style': {
             'width': 1,
@@ -348,6 +364,14 @@ const GRAPH_STYLE = [
         'style': {
             'border-color': APP_PRIMARY_COLOR,
             'background-color': BG_COLOR,
+            'background-opacity': 0.75,
+        }
+    },
+    {
+        'selector': 'node[unavailable].active',
+        'style': {
+            'border-color': UNAVAILABLE_BORDER_COLOR,
+            'background-color': UNAVAILABLE_BG_COLOR,
             'background-opacity': 0.75,
         }
     }

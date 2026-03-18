@@ -164,7 +164,24 @@ export default {
     connectivityError: {
       type: Object,
       default: () => {},
-    }
+    },
+    destinationsCombinations: {
+      type: Array,
+      default: () => [],
+    },
+    originsCombinations: {
+      type: Array,
+      default: () => [],
+    },
+    componentsCombinations: {
+      type: Array,
+      default: () => [],
+    },
+  },
+  computed: {
+    unavailableNodeIdsKey: function () {
+      return JSON.stringify(this.getUnavailableNodeIds());
+    },
   },
   data: function () {
     return {
@@ -190,12 +207,16 @@ export default {
     };
   },
   watch: {
-    connectivityFromMap: function (oldVal, newVal) {
-      if (oldVal != newVal) {
-        this.showSpinner();
-        this.start();
+    connectivityFromMap: function (newVal, oldVal) {
+      if (newVal !== oldVal) {
+        this.restartGraph();
       }
-    }
+    },
+    unavailableNodeIdsKey: function (newVal, oldVal) {
+      if (newVal !== oldVal) {
+        this.restartGraph();
+      }
+    },
   },
   mounted() {
     this.showSpinner();
@@ -310,6 +331,7 @@ export default {
       sessionStorage.setItem('connectivity-graph-expiry', expiry);
     },
     start: function () {
+      this.loadingError = '';
       this.run()
         .then((res) => {
           if (res?.success) {
@@ -363,7 +385,10 @@ export default {
         await this.getCachedTermLabels();
       }
 
-      this.connectivityGraph = new ConnectivityGraph(this.labelCache, graphCanvas);
+      this.connectivityGraph?.clearConnectivity();
+      this.connectivityGraph = new ConnectivityGraph(this.labelCache, graphCanvas, {
+        unavailableNodeIds: this.getUnavailableNodeIds(),
+      });
       const connectivityInfo = this.knowledgeByPath.get(neuronPath);
 
       // Update connectivity
@@ -520,6 +545,46 @@ export default {
         this.cacheNodeLabels(edge[0]);
         this.cacheNodeLabels(edge[1]);
       }
+    },
+    flattenCombinationIds: function (value, ids = []) {
+      if (Array.isArray(value)) {
+        value.forEach((item) => {
+          this.flattenCombinationIds(item, ids);
+        });
+      } else if (typeof value === 'string' && value) {
+        ids.push(value);
+      }
+
+      return ids;
+    },
+    getUnavailableNodeIds: function () {
+      const unavailableNodeIds = new Set();
+      const combinations = [
+        ...this.originsCombinations,
+        ...this.componentsCombinations,
+        ...this.destinationsCombinations,
+      ];
+
+      combinations.forEach((combination) => {
+        const isUnavailableOnMap = !combination?.mapId?.length || !combination?.mapLabel;
+        if (!isUnavailableOnMap) {
+          return;
+        }
+
+        this.flattenCombinationIds(combination?.sckanId).forEach((id) => {
+          unavailableNodeIds.add(id);
+        });
+      });
+
+      return [...unavailableNodeIds].sort();
+    },
+    restartGraph: function () {
+      if (!this.$refs.graphCanvas) {
+        return;
+      }
+
+      this.showSpinner();
+      this.start();
     },
     showSpinner: function () {
       this.loading = true;
