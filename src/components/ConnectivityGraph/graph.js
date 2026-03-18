@@ -302,10 +302,10 @@ export class ConnectivityGraph extends EventTarget
         const hasUnavailableTerm = nodeTerms.some(term => this.unavailableNodeIds.has(term))
         const hasMappedTerm = nodeTerms.some(term => this.termOverrides.has(term))
 
-        if (hasUnavailableTerm) {
-            result['unavailable'] = true
-        } else if (hasMappedTerm) {
+        if (hasMappedTerm) {
             result['mapped'] = true
+        } else if (hasUnavailableTerm) {
+            result['unavailable'] = true
         }
         if (this.hasPhenotypes) {
             if (this.axons.includes(id)) {
@@ -620,7 +620,7 @@ class CytoscapeGraph extends EventTarget
             })
         }
 
-        if (isUnavailable) {
+        else if (isUnavailable) {
           tooltipLines.unshift({ text: '', type: 'spacer' })
           tooltipLines.unshift({ text: 'SCKAN feature unavailable on Map', type: 'unavailable' })
         }
