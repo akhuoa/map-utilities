@@ -596,6 +596,7 @@ class CytoscapeGraph extends EventTarget
             data.label + ' (' + data.id + ')'
         ))
         const mappedFrom = data.mappedFrom || []
+        const isUnavailable = !!data.unavailable
 
         if (mappedFrom.length) {
             labels.push('')
@@ -603,6 +604,11 @@ class CytoscapeGraph extends EventTarget
             mappedFrom.forEach((mapping) => {
                 labels.push(`${mapping.sourceLabel} (${mapping.sourceId}))`)
             })
+        }
+
+        if (isUnavailable) {
+            labels.push('')
+            labels.push('SCKAN feature unavailable on Map')
         }
 
         this.tooltip.innerText = capitalizeLabels(labels.join('\n'))
