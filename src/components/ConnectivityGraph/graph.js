@@ -376,13 +376,15 @@ export class ConnectivityGraph extends EventTarget
             combinedLabel,
         ].join('\n')
 
+        const displayLabel = formatDisplayLabels([combinedLabel])
+
         const result = {
             id,
             label,
-            displayLabel: formatDisplayLabels([combinedLabel]),
+            displayLabel,
             connectivityData: displayIds.map((displayId) => ({
                 id: displayId,
-                label: this.getConnectivityLabelForId(displayId, combinedLabel),
+                label: displayLabel || displayId,
             })),
         }
 
@@ -636,6 +638,32 @@ function getNodeConnectivityData(data) {
     return getConnectivityData(data?.label || '')
 }
 
+function getTooltipConnectivityData(data) {
+    const grouped = new Map()
+
+    getNodeConnectivityData(data).forEach((item) => {
+        const label = String(item?.label || item?.id || '').replace(/\s+/g, ' ').trim()
+        const id = String(item?.id || '').trim()
+        const key = label.toLowerCase()
+
+        if (!grouped.has(key)) {
+            grouped.set(key, {
+                label,
+                ids: [],
+            })
+        }
+
+        if (id && !grouped.get(key).ids.includes(id)) {
+            grouped.get(key).ids.push(id)
+        }
+    })
+
+    return [...grouped.values()].map((item) => ({
+        label: item.label,
+        id: item.ids.join(', '),
+    }))
+}
+
 function areArraysIdentical(arr1, arr2) {
     arr1.sort((a, b) => {
       if (a.id < b.id) return -1
@@ -650,7 +678,7 @@ function areArraysIdentical(arr1, arr2) {
     })
 
     for (let i = 0; i < arr1.length; i++) {
-      if (JSON.stringify(arr1[i]) !== JSON.stringify(arr2[i])) {
+      if (arr1[i]?.id !== arr2[i]?.id) {
         return false
       }
     }
@@ -762,7 +790,7 @@ class CytoscapeGraph extends EventTarget
     {
         const node = event.target
         const data = node.data()
-        const connectivityData = getNodeConnectivityData(data)
+        const connectivityData = getTooltipConnectivityData(data)
         const tooltipLines = connectivityData.map((item) => ({
             text: `${item.label} (${item.id})`,
             type: 'default',
