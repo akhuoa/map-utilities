@@ -192,7 +192,7 @@ export class ConnectivityGraph extends EventTarget
     reset()
     //=====
     {
-        if (this.cyg?.cy) {
+        if (this.cyg) {
             this.cyg.resetView()
         }
     }
@@ -200,7 +200,7 @@ export class ConnectivityGraph extends EventTarget
     resize()
     //======
     {
-        if (this.cyg?.cy) {
+        if (this.cyg) {
             this.cyg.resize()
         }
     }
