@@ -872,7 +872,7 @@ class CytoscapeGraph extends EventTarget
     {
         const node = event.target
         const data = node.data()
-        let connectivityData = getNodeConnectivityData(data)
+        let connectivityData = getTooltipConnectivityData(data)
 
         if (show) {
             node.addClass('active')
