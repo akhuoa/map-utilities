@@ -110,7 +110,8 @@
       </div>
     </div>
 
-    <div v-show="connectivityError.errorConnectivities" class="connectivity-graph-error">
+    <!-- The error message shown in tooltip for single connectivity list view -->
+    <div v-show="!hasSingleConnectivityList && connectivityError.errorConnectivities" class="connectivity-graph-error">
       <strong>{{ connectivityError.errorConnectivities }}</strong>
       {{ connectivityError.errorMessage }}
     </div>
@@ -164,13 +165,66 @@ export default {
     connectivityError: {
       type: Object,
       default: () => {},
-    }
+    },
+    origins: {
+      type: Array,
+      default: () => []
+    },
+    components: {
+      type: Array,
+      default: () => []
+    },
+    destinations: {
+      type: Array,
+      default: () => []
+    },
+    originsWithDatasets: {
+      type: Array,
+      default: () => []
+    },
+    componentsWithDatasets: {
+      type: Array,
+      default: () => []
+    },
+    destinationsWithDatasets: {
+      type: Array,
+      default: () => []
+    },
+    hasSingleConnectivityList: {
+      type: Boolean,
+      default: false,
+    },
+    destinationsCombinations: {
+      type: Array,
+      default: () => [],
+    },
+    originsCombinations: {
+      type: Array,
+      default: () => [],
+    },
+    componentsCombinations: {
+      type: Array,
+      default: () => [],
+    },
+  },
+  computed: {
+    unavailableNodeIdsKey: function () {
+      return JSON.stringify(this.getUnavailableNodeIds());
+    },
+    mappedTermOverridesKey: function () {
+      return JSON.stringify(this.getMappedTermOverrides());
+    },
+    termLabelsKey: function () {
+      return JSON.stringify(this.getTermLabels());
+    },
   },
   data: function () {
     return {
       loading: true,
       loadingError: '',
       connectivityGraph: null,
+      resizeObserver: null,
+      resizeAnimationFrame: null,
       selectedSource: '',
       availableSources: [],
       pathList: [],
@@ -188,21 +242,70 @@ export default {
     };
   },
   watch: {
-    connectivityFromMap: function (oldVal, newVal) {
-      if (oldVal != newVal) {
-        this.showSpinner();
-        this.start();
+    connectivityFromMap: function (newVal, oldVal) {
+      if (newVal !== oldVal) {
+        this.restartGraph();
       }
-    }
+    },
+    unavailableNodeIdsKey: function (newVal, oldVal) {
+      if (newVal !== oldVal) {
+        this.restartGraph();
+      }
+    },
+    mappedTermOverridesKey: function (newVal, oldVal) {
+      if (newVal !== oldVal) {
+        this.restartGraph();
+      }
+    },
+    termLabelsKey: function (newVal, oldVal) {
+      if (newVal !== oldVal) {
+        this.restartGraph();
+      }
+    },
   },
   mounted() {
     this.showSpinner();
     this.updateTooltipContainer();
+    this.setupResizeObserver();
     this.refreshCache();
     this.loadCacheData();
     this.start();
   },
+  beforeUnmount() {
+    this.teardownResizeObserver();
+    this.connectivityGraph?.clearConnectivity();
+  },
   methods: {
+    setupResizeObserver: function () {
+      const target = this.$refs.connectivityGraphRef;
+
+      if (!target || typeof ResizeObserver === 'undefined') {
+        return;
+      }
+
+      this.resizeObserver = new ResizeObserver(() => {
+        if (this.resizeAnimationFrame) {
+          cancelAnimationFrame(this.resizeAnimationFrame);
+        }
+
+        this.resizeAnimationFrame = requestAnimationFrame(() => {
+          this.connectivityGraph?.resize();
+        });
+      });
+
+      this.resizeObserver.observe(target);
+    },
+    teardownResizeObserver: function () {
+      if (this.resizeAnimationFrame) {
+        cancelAnimationFrame(this.resizeAnimationFrame);
+        this.resizeAnimationFrame = null;
+      }
+
+      if (this.resizeObserver) {
+        this.resizeObserver.disconnect();
+        this.resizeObserver = null;
+      }
+    },
     updateTooltipContainer: function () {
       this.connectivityGraphContainer = this.$refs.connectivityGraphRef;
     },
@@ -273,6 +376,7 @@ export default {
       sessionStorage.setItem('connectivity-graph-expiry', expiry);
     },
     start: function () {
+      this.loadingError = '';
       this.run()
         .then((res) => {
           if (res?.success) {
@@ -326,7 +430,13 @@ export default {
         await this.getCachedTermLabels();
       }
 
-      this.connectivityGraph = new ConnectivityGraph(this.labelCache, graphCanvas);
+      this.connectivityGraph?.clearConnectivity();
+      this.connectivityGraph = new ConnectivityGraph(this.labelCache, graphCanvas, {
+        unavailableNodeIds: this.getUnavailableNodeIds(),
+        termOverrides: this.getMappedTermOverrides(),
+        termLabels: this.getTermLabels(),
+        combinationMap: this.getCombinationMap(),
+      });
       const connectivityInfo = this.knowledgeByPath.get(neuronPath);
 
       // Update connectivity
@@ -484,6 +594,143 @@ export default {
         this.cacheNodeLabels(edge[1]);
       }
     },
+    flattenCombinationIds: function (value, ids = []) {
+      if (Array.isArray(value)) {
+        value.forEach((item) => {
+          this.flattenCombinationIds(item, ids);
+        });
+      } else if (typeof value === 'string' && value) {
+        ids.push(value);
+      }
+
+      return ids;
+    },
+    getUnavailableNodeIds: function () {
+      const unavailableNodeIds = new Set();
+      const combinations = [
+        ...this.originsCombinations,
+        ...this.componentsCombinations,
+        ...this.destinationsCombinations,
+      ];
+
+      combinations.forEach((combination) => {
+        const isUnavailableOnMap = !combination?.mapId?.length || !combination?.mapLabel;
+        if (!isUnavailableOnMap) {
+          return;
+        }
+
+        this.flattenCombinationIds(combination?.sckanId).forEach((id) => {
+          unavailableNodeIds.add(id);
+        });
+      });
+
+      return [...unavailableNodeIds].sort();
+    },
+    getMappedTermOverrides: function () {
+      const mappedTermOverrides = {};
+      const combinations = [
+        ...this.originsCombinations,
+        ...this.componentsCombinations,
+        ...this.destinationsCombinations,
+      ];
+
+      combinations.forEach((combination) => {
+        if (!combination?.sckanId?.length || !combination?.mapId?.length || !combination?.mapLabel) {
+          return;
+        }
+
+        const isDirectMatch = JSON.stringify(combination.sckanId) === JSON.stringify(combination.mapId);
+        if (isDirectMatch) {
+          return;
+        }
+
+        const sckanIds = this.flattenCombinationIds(combination.sckanId);
+        const mapIds = this.flattenCombinationIds(combination.mapId);
+        const mapId = mapIds[0];
+
+        if (!mapId) {
+          return;
+        }
+
+        sckanIds.forEach((sckanId) => {
+          mappedTermOverrides[sckanId] = {
+            id: mapId,
+            label: combination.mapLabel,
+          };
+        });
+      });
+
+      return mappedTermOverrides;
+    },
+    getTermLabels: function () {
+      const termLabels = {};
+      const combinations = [
+        ...this.originsCombinations,
+        ...this.componentsCombinations,
+        ...this.destinationsCombinations,
+      ];
+
+      combinations.forEach((combination) => {
+        const sckanLabel = combination?.sckanLabel;
+        const mapLabel = combination?.mapLabel;
+
+        if (sckanLabel) {
+          this.flattenCombinationIds(combination?.sckanId).forEach((id) => {
+            if (id) {
+              termLabels[id] = sckanLabel;
+            }
+          });
+        }
+
+        if (mapLabel) {
+          this.flattenCombinationIds(combination?.mapId).forEach((id) => {
+            if (id) {
+              termLabels[id] = mapLabel;
+            }
+          });
+        }
+      });
+
+      const withDatasets = [
+        ...this.originsWithDatasets,
+        ...this.componentsWithDatasets,
+        ...this.destinationsWithDatasets,
+      ];
+      withDatasets.forEach((item) => {
+        if (item?.id && item?.name && !termLabels[item.id]) {
+          termLabels[item.id] = item.name;
+        }
+      });
+
+      return termLabels;
+    },
+    getCombinationMap: function () {
+      const combinationMap = {};
+      const combinations = [
+        ...this.originsCombinations,
+        ...this.componentsCombinations,
+        ...this.destinationsCombinations,
+      ];
+
+      combinations.forEach((combination) => {
+        if (combination?.sckanId) {
+          const key = JSON.stringify(combination.sckanId);
+          if (!combinationMap[key]) {
+            combinationMap[key] = combination;
+          }
+        }
+      });
+
+      return combinationMap;
+    },
+    restartGraph: function () {
+      if (!this.$refs.graphCanvas) {
+        return;
+      }
+
+      this.showSpinner();
+      this.start();
+    },
     showSpinner: function () {
       this.loading = true;
     },
@@ -491,13 +738,13 @@ export default {
       this.loading = false;
     },
     reset: function () {
-      this.connectivityGraph.reset();
+      this.connectivityGraph?.reset();
     },
     zoomIn: function () {
-      this.connectivityGraph.zoom(ZOOM_INCREMENT);
+      this.connectivityGraph?.zoom(ZOOM_INCREMENT);
     },
     zoomOut: function () {
-      this.connectivityGraph.zoom(-ZOOM_INCREMENT);
+      this.connectivityGraph?.zoom(-ZOOM_INCREMENT);
     },
     /**
      * Enable/disable user zoom for scrolling
@@ -505,7 +752,7 @@ export default {
     toggleZoom: function () {
       this.zoomEnabled = !this.zoomEnabled;
       this.zoomLockLabel = this.zoomEnabled ? ZOOM_UNLOCK_LABEL : ZOOM_LOCK_LABEL;
-      this.connectivityGraph.enableZoom(!this.zoomEnabled);
+      this.connectivityGraph?.enableZoom(!this.zoomEnabled);
     }
   },
 };
@@ -667,7 +914,7 @@ export default {
   padding: 4px 10px;
   font-family: Asap;
   font-size: 12px;
-  background: #f3ecf6 !important;
+  background-color: #f3ecf6;
   border: 1px solid $app-primary-color;
   border-radius: var(--el-border-radius-base);
   box-shadow: 1px 1px 6px 1px rgba($app-primary-color, 0.15);
@@ -676,6 +923,28 @@ export default {
   left: 0;
   width: fit-content;
   z-index: 1;
+}
+
+:deep(.cy-graph-tooltip-line) {
+  line-height: 1.35;
+}
+
+:deep(.cy-graph-tooltip-spacer) {
+  height: 4px;
+}
+
+:deep(.cy-graph-tooltip-line.is-alias) {
+  font-style: italic;
+  color: #6f6f6f;
+}
+
+:deep(.cy-graph-tooltip-line.is-alias-source) {
+  color: #4f4f4f;
+}
+
+:deep(.cy-graph-tooltip-line.is-unavailable) {
+  font-style: italic;
+  color: #6f6f6f;
 }
 
 .connectivity-graph-error {
