@@ -435,6 +435,7 @@ export default {
         unavailableNodeIds: this.getUnavailableNodeIds(),
         termOverrides: this.getMappedTermOverrides(),
         termLabels: this.getTermLabels(),
+        combinationMap: this.getCombinationMap(),
       });
       const connectivityInfo = this.knowledgeByPath.get(neuronPath);
 
@@ -702,6 +703,25 @@ export default {
       });
 
       return termLabels;
+    },
+    getCombinationMap: function () {
+      const combinationMap = {};
+      const combinations = [
+        ...this.originsCombinations,
+        ...this.componentsCombinations,
+        ...this.destinationsCombinations,
+      ];
+
+      combinations.forEach((combination) => {
+        if (combination?.sckanId) {
+          const key = JSON.stringify(combination.sckanId);
+          if (!combinationMap[key]) {
+            combinationMap[key] = combination;
+          }
+        }
+      });
+
+      return combinationMap;
     },
     restartGraph: function () {
       if (!this.$refs.graphCanvas) {

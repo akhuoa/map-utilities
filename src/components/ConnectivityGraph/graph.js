@@ -78,6 +78,7 @@ export class ConnectivityGraph extends EventTarget
     unavailableNodeIds = new Set()
     termOverrides = new Map()
     termLabels = new Map()
+    combinationMap = new Map()
 
     constructor(labelCache, graphCanvas, options={})
     {
@@ -93,6 +94,9 @@ export class ConnectivityGraph extends EventTarget
         this.termLabels = options.termLabels instanceof Map
             ? options.termLabels
             : new Map(Object.entries(options.termLabels || {}));
+        this.combinationMap = options.combinationMap instanceof Map
+            ? options.combinationMap
+            : new Map(Object.entries(options.combinationMap || {}));
     }
 
     async addConnectivity(knowledge)
@@ -163,8 +167,7 @@ export class ConnectivityGraph extends EventTarget
         if (this.cyg?.cy) {
             let eleId = ''
             this.cyg.cy.elements().forEach((ele) => {
-                const label = ele.data('label')
-                const connectivityData = getConnectivityData(label)
+                const connectivityData = getNodeConnectivityData(ele.data())
 
                 if (areArraysIdentical(selectedConnectivityData, connectivityData)) {
                     eleId = ele.id()
@@ -258,6 +261,16 @@ export class ConnectivityGraph extends EventTarget
     {
         const id = JSON.stringify(node)
         const nodeTerms = [node[0], ...node[1]]
+        // combination-level lookup (exact compound node match)
+        // This fixes cross-combination contamination where a term that is
+        // unavailable in one combination incorrectly marks a node from a
+        // different, available combination as unavailable.
+        const combination = this.combinationMap.get(id)
+        if (combination) {
+            return this.graphNodeFromCombination(id, nodeTerms, combination)
+        }
+
+        // individual term lookup (fallback for non-combination nodes)
         const displayTerms = nodeTerms.map((term) => {
             const override = this.termOverrides.get(term)
             return override?.id || term
@@ -285,7 +298,12 @@ export class ConnectivityGraph extends EventTarget
 
         const result = {
             id,
-            label: label.join('\n')
+            label: label.join('\n'),
+            displayLabel: formatDisplayLabels(uniqueTermPairs.map((pair) => pair.humanLabel)),
+            connectivityData: uniqueTermPairs.map((pair) => ({
+                id: pair.id,
+                label: pair.humanLabel || pair.id,
+            })),
         }
         const mappedFrom = []
         nodeTerms.forEach((term) => {
@@ -338,11 +356,109 @@ export class ConnectivityGraph extends EventTarget
         return result
     }
 
+    graphNodeFromCombination(id, nodeTerms, combination)
+    //==================================================
+    {
+        const hasMapId = combination.mapId?.length > 0
+        const isUnavailableOnMap = !hasMapId || !combination.mapLabel
+        const isDirectMatch = !isUnavailableOnMap
+            && JSON.stringify(combination.mapId) === JSON.stringify(combination.sckanId)
+        const isMappedTerm = !isUnavailableOnMap && !isDirectMatch
+
+        const displayIds = isMappedTerm
+            ? [...new Set(flattenIds(combination.mapId))]
+            : [...new Set(nodeTerms)]
+
+        const combinedLabel = (isMappedTerm ? combination.mapLabel : combination.sckanLabel) || ''
+
+        const label = [
+            ...displayIds,
+            combinedLabel,
+        ].join('\n')
+
+        const result = {
+            id,
+            label,
+            displayLabel: formatDisplayLabels([combinedLabel]),
+            connectivityData: displayIds.map((displayId) => ({
+                id: displayId,
+                label: this.getConnectivityLabelForId(displayId, combinedLabel),
+            })),
+        }
+
+        if (isMappedTerm) {
+            result['mapped'] = true
+            const mapIds = flattenIds(combination.mapId)
+            const primaryMapId = mapIds[0]
+            if (primaryMapId) {
+                result['mappedFrom'] = [{
+                    sourceId: JSON.stringify(combination.sckanId),
+                    sourceLabel: combination.sckanLabel || '',
+                    targetId: primaryMapId,
+                    targetLabel: combination.mapLabel || combination.sckanLabel || '',
+                }]
+            }
+        } else if (isUnavailableOnMap) {
+            result['unavailable'] = true
+        }
+
+        if (this.hasPhenotypes) {
+            if (this.axons.includes(id)) {
+                result['axon'] = true
+            } else if (this.dendrites.includes(id)) {
+                result['dendrite'] = true
+            } else {
+                result['somas'] = true
+            }
+        } else {
+            if (this.axons.includes(id)) {
+                if (this.dendrites.includes(id) || this.somas.includes(id)) {
+                    result['somas'] = true
+                } else {
+                    result['axon'] = true
+                }
+            } else if (this.dendrites.includes(id) || this.somas.includes(id)) {
+                result['dendrite'] = true
+            }
+        }
+
+        return result
+    }
+
+    getConnectivityLabelForId(displayId, fallbackLabel='')
+    //===============================================
+    {
+        const labelFromCache = this.labelCache.get(displayId)
+        if (labelFromCache) {
+            return labelFromCache
+        }
+
+        const labelFromTerms = this.termLabels.get(displayId)
+        if (labelFromTerms && normalizeLabel(labelFromTerms) !== normalizeLabel(fallbackLabel)) {
+            return labelFromTerms
+        }
+
+        return displayId
+    }
+
     on(eventName, callback)
     //=====================
     {
         this.addEventListener(eventName, callback)
     }
+}
+
+function flattenIds(value, ids = []) {
+    if (Array.isArray(value)) {
+        value.forEach((item) => flattenIds(item, ids))
+    } else if (typeof value === 'string' && value) {
+        ids.push(value)
+    }
+    return ids
+}
+
+function normalizeLabel(label) {
+    return String(label || '').replace(/\s+/g, ' ').trim().toLowerCase()
 }
 
 //==============================================================================
@@ -358,7 +474,7 @@ const GRAPH_STYLE = [
     {
         'selector': 'node',
         'style': {
-            'label': function(ele) { return trimLabel(ele.data('label')) },
+            'label': function(ele) { return ele.data('displayLabel') || trimLabel(ele.data('label')) },
             // 'background-color': '#80F0F0',
             'background-color': 'transparent',
             'background-opacity': '0',
@@ -447,7 +563,38 @@ function trimLabel(label) {
     const labels = label.split('\n')
     const half = labels.length/2
     const trimLabels = labels.slice(half)
-    return capitalizeLabels(trimLabels.join('\n'))
+    // Deduplicate repeated labels, even if they differ only by whitespace.
+    const seen = new Set()
+    const uniqueLabels = trimLabels
+        .map((item) => String(item || '').replace(/\s+/g, ' ').trim())
+        .filter((item) => item)
+        .filter((item) => {
+            const key = item.toLowerCase()
+            if (seen.has(key)) {
+                return false
+            }
+            seen.add(key)
+            return true
+        })
+    return capitalizeLabels(uniqueLabels.join('\n'))
+}
+
+function formatDisplayLabels(labels) {
+    const seen = new Set()
+    const uniqueLabels = (labels || [])
+        .flatMap((item) => String(item || '').split('\n'))
+        .map((item) => String(item || '').replace(/\s+/g, ' ').trim())
+        .filter((item) => item)
+        .filter((item) => {
+            const key = item.toLowerCase()
+            if (seen.has(key)) {
+                return false
+            }
+            seen.add(key)
+            return true
+        })
+
+    return capitalizeLabels(uniqueLabels.join('\n'))
 }
 
 function capitalizeLabels(input) {
@@ -479,6 +626,14 @@ function getConnectivityData(label) {
         })
     }
     return connectivityData
+}
+
+function getNodeConnectivityData(data) {
+    if (Array.isArray(data?.connectivityData) && data.connectivityData.length) {
+        return data.connectivityData
+    }
+
+    return getConnectivityData(data?.label || '')
 }
 
 function areArraysIdentical(arr1, arr2) {
@@ -607,8 +762,7 @@ class CytoscapeGraph extends EventTarget
     {
         const node = event.target
         const data = node.data()
-        const { label } = data
-        const connectivityData = getConnectivityData(label)
+        const connectivityData = getNodeConnectivityData(data)
         const tooltipLines = connectivityData.map((item) => ({
             text: `${item.label} (${item.id})`,
             type: 'default',
@@ -690,19 +844,17 @@ class CytoscapeGraph extends EventTarget
     {
         const node = event.target
         const data = node.data()
-        let { label } = data
+        let connectivityData = getNodeConnectivityData(data)
 
         if (show) {
             node.addClass('active')
         } else {
             node.removeClass('active')
-            label = ''
+            connectivityData = []
             setTimeout(() => {
                 node.unselect()
             })
         }
-
-        const connectivityData = getConnectivityData(label)
 
         const tapEvent = new CustomEvent('tap-node', {
             detail: connectivityData
