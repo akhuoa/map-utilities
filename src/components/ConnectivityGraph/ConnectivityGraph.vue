@@ -506,7 +506,7 @@ export default {
     loadPathData: async function (source) {
       const data = await this.query(
         `select entity, knowledge from knowledge
-          where entity like 'ilxtr:%' and source=?
+          where (entity like 'ilxtr:%' or entity like 'ilx:composer%') and source=?
           order by entity`,
         [source]);
       const pathList = data ? data.values : [];
