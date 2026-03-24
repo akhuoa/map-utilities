@@ -166,6 +166,8 @@ export default {
 
 .reconciliation-table-inner {
 	width: 100%;
+	padding: 0;
+	border: 0 none;
 	border-collapse: separate;
 	border-spacing: 0;
 	table-layout: fixed;
