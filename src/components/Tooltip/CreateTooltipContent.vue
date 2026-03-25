@@ -158,10 +158,11 @@ export default {
   },
   computed: {
     canBeConfirmed: function() {
-      if (this.createData.editingIndex > -1) {
+      if (!this.createData.toBeDeleted &&
+        this.createData.editingIndex > -1) {
         return true;
       } else if (this.group) {
-        if (!this.renaming) {
+        if (!this.createData.renaming) {
           return true;
         } else if (this.group !== this.createData.tempGroupName) {
           return true;
@@ -170,7 +171,8 @@ export default {
       return false;
     },
     confirmText: function () {
-      if (this.createData.editingIndex > -1) {
+      if (!this.createData.toBeDeleted &&
+        this.createData.editingIndex > -1) {
         return "Edit";
       } else if (this.createData.renaming) {
         return "Rename";
