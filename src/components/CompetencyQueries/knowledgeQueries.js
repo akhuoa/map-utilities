@@ -299,11 +299,11 @@ async function getFlatmapFilterOptions (flatmapAPI, mapImp, providedKnowledge, p
             }
           }
         } else if (key === "alert") {
-          main.label = "Alert"
+          main.label = "Notes"
           for (const facet of ["with", "without"]) {
             children.push({
               key: `${main.key}.${facet}`,
-              label: `${facet} alerts`
+              label: `${facet} notes`
             })
           }
         }
