@@ -41,8 +41,8 @@
     <div class="block" v-else>
       <div class="title">{{ entry.featureId }}</div>
     </div>
-    <div v-if="entry.featuresAlert" class="attribute-title-container">
-      <span class="attribute-title">Alert</span>
+    <div v-if="entry.featuresAlert?.length" class="attribute-title-container">
+      <span class="attribute-title">Notes</span>
       <el-popover
         width="250"
         trigger="hover"
@@ -53,7 +53,7 @@
           <el-icon class="info"><el-icon-warning /></el-icon>
         </template>
         <span style="word-break: keep-all">
-          {{ entry.featuresAlert }}
+          {{ entry.featuresAlert.join(", ") }}
         </span>
       </el-popover>
     </div>
