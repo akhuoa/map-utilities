@@ -41,16 +41,31 @@
     <div class="block" v-else>
       <div class="title">{{ entry.featureId }}</div>
     </div>
-    <div v-if="entry.featuresAlert?.length" class="block">
-      <div class="attribute-title-container">
-        <div class="attribute-title">
-          Notes
-        </div>
+    <div v-if="entry.featuresAlert?.length">
+      <div
+        class="hide"
+        id="toggle-notes"
+        @click="showNotes = !showNotes"
+      >
+        Notes
+        <el-icon>
+          <el-icon-arrow-up v-if="showNotes" />
+          <el-icon-arrow-down v-else />
+        </el-icon>
       </div>
-      <div class="alert-block"
-        v-for="alert in entry.featuresAlert"
-        v-html="formatAlertText(alert)"
-      ></div>
+      <transition name="slide-fade">
+        <div v-show="showNotes" class="block">
+          <div class="attribute-title-container">
+            <div class="attribute-title">
+              Notes
+            </div>
+          </div>
+          <div class="alert-block"
+            v-for="alert in entry.featuresAlert"
+            v-html="formatAlertText(alert)"
+          ></div>
+        </div>
+      </transition>
     </div>
     <div
       v-show="showDetails"
@@ -124,6 +139,7 @@ export default {
     return {
       loading: false,
       showDetails: false,
+      showNotes: false,
       originDescriptions: {
         motor: "is the location of the initial cell body of the circuit",
         sensory: "is the location of the initial cell body in the PNS circuit",
@@ -187,6 +203,7 @@ export default {
       handler: function (newVal, oldVal) {
         if (newVal !== oldVal) {
           this.entryIndex = 0;
+          this.showNotes = false;
         }
       },
     },
