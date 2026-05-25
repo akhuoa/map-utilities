@@ -47,9 +47,10 @@
           Notes
         </div>
       </div>
-      <div style="word-break: keep-all">
-        {{ entry.featuresAlert.join(", ") }}
-      </div>
+      <div class="alert-block"
+        v-for="alert in entry.featuresAlert"
+        v-html="formatAlertText(alert)"
+      ></div>
     </div>
     <div
       v-show="showDetails"
@@ -223,6 +224,38 @@ export default {
         this.availableAnatomyFacets = JSON.parse(availableAnatomyFacets);
       }
     },
+    formatAlertText: function (text) {
+      if (!text) return '';
+      const escaped = text
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;');
+      const linkified = escaped.replace(
+        /(https?:\/\/[^\s"<>\[]+)/g,
+        (url) => {
+          const parts = url.match(/^(.*?)([\].,;:!?]*)$/);
+          const cleanUrl = parts ? parts[1] : url;
+          const suffix = parts ? parts[2] : '';
+          return `<a href="${cleanUrl}" target="_blank" rel="noopener noreferrer">${cleanUrl}</a>${suffix}`;
+        }
+      );
+
+      const normalised = linkified
+        .replace(/\\n/g, '\n')
+        .replace(/\r\n/g, '\n')
+        .replace(/\r/g, '\n');
+
+      return normalised
+        .split('\n')
+        .map((line) => {
+          const withBoldLabel = line.replace(
+            /^\s*([A-Za-z][^:<]{0,120}:)/,
+            '<strong>$1</strong>'
+          );
+          return `<div class="alert-line">${withBoldLabel}</div>`;
+        })
+        .join('\n');
+    },
   },
 };
 </script>
@@ -366,6 +399,26 @@ export default {
     &::before {
       margin: 0 auto;
       border-color: transparent transparent $app-primary-color transparent;
+    }
+  }
+}
+
+.alert-block {
+  background-color: var(--el-color-warning-light-9);
+  border: 1px dashed var(--el-color-warning);
+  padding: 0.75rem;
+  border-radius: 4px;
+
+  :deep(.alert-line + .alert-line) {
+    margin-top: 0.5rem;
+  }
+
+  :deep(a) {
+    color: $app-primary-color;
+    word-break: break-all;
+
+    &:hover {
+      opacity: 0.8;
     }
   }
 }
