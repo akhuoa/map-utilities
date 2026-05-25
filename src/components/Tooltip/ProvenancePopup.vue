@@ -48,7 +48,7 @@
     <!-- Alert notes -->
     <div v-if="entry.featuresAlert?.length">
       <div
-        class="hide"
+        class="collapse-toggle"
         id="toggle-notes"
         @click="showNotes = !showNotes"
       >
@@ -71,7 +71,7 @@
     <!-- Connectiity info -->
     <div
       v-show="showDetails"
-      class="hide"
+      class="collapse-toggle"
       id="hide-path-info"
       @click="showDetails = false"
     >
@@ -80,7 +80,7 @@
     </div>
     <div
       v-show="!showDetails"
-      class="hide"
+      class="collapse-toggle"
       id="show-path-info"
       @click="showDetails = true"
     >
@@ -316,7 +316,7 @@ export default {
   margin-left: 8px;
 }
 
-.hide {
+.collapse-toggle {
   color: $app-primary-color;
   cursor: pointer;
   margin-right: 6px;
