@@ -1,5 +1,6 @@
 <template>
   <div v-if="entry" class="main" v-loading="loading">
+    <!-- Navigation -->
     <div v-if="tooltipEntry.length > 1" class="toggle-button">
       <el-popover width="auto" trigger="hover" :teleported="false">
         <template #reference>
@@ -26,6 +27,8 @@
         <span>{{ nextLabel }}</span>
       </el-popover>
     </div>
+
+    <!-- Title -->
     <div class="block" v-if="entry.title">
       <div class="title">{{ capitalise(entry.title) }}</div>
       <div
@@ -41,6 +44,8 @@
     <div class="block" v-else>
       <div class="title">{{ entry.featureId }}</div>
     </div>
+
+    <!-- Alert notes -->
     <div v-if="entry.featuresAlert?.length">
       <div
         class="hide"
@@ -62,6 +67,8 @@
         </div>
       </transition>
     </div>
+
+    <!-- Connectiity info -->
     <div
       v-show="showDetails"
       class="hide"
