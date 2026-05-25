@@ -29,20 +29,22 @@
     </div>
 
     <!-- Title -->
-    <div class="block" v-if="entry.title">
-      <div class="title">{{ capitalise(entry.title) }}</div>
-      <div
-        v-if="
-          entry.provenanceTaxonomyLabel &&
-          entry.provenanceTaxonomyLabel.length > 0
-        "
-        class="subtitle"
-      >
-        {{ provSpeciesDescription }}
+    <div>
+      <div class="block" v-if="entry.title">
+        <div class="title">{{ capitalise(entry.title) }}</div>
+        <div
+          v-if="
+            entry.provenanceTaxonomyLabel &&
+            entry.provenanceTaxonomyLabel.length > 0
+          "
+          class="subtitle"
+        >
+          {{ provSpeciesDescription }}
+        </div>
       </div>
-    </div>
-    <div class="block" v-else>
-      <div class="title">{{ entry.featureId }}</div>
+      <div class="block" v-else>
+        <div class="title">{{ entry.featureId }}</div>
+      </div>
     </div>
 
     <!-- Alert notes -->
@@ -59,7 +61,7 @@
         </el-icon>
       </div>
       <transition name="slide-fade">
-        <div v-show="showNotes" class="block">
+        <div v-show="showNotes" class="block collapse-block">
           <div class="alert-block"
             v-for="alert in entry.featuresAlert"
             v-html="formatAlertText(alert)"
@@ -69,45 +71,47 @@
     </div>
 
     <!-- Connectiity info -->
-    <div
-      v-show="showDetails"
-      class="collapse-toggle"
-      id="hide-path-info"
-      @click="showDetails = false"
-    >
-      Hide path information
-      <el-icon><el-icon-arrow-up /></el-icon>
-    </div>
-    <div
-      v-show="!showDetails"
-      class="collapse-toggle"
-      id="show-path-info"
-      @click="showDetails = true"
-    >
-      Show path information
-      <el-icon><el-icon-arrow-down /></el-icon>
-    </div>
-    <transition name="slide-fade">
-      <div v-show="showDetails" class="content-container scrollbar">
-        <connectivity-list
-          :key="entry.featureId[0]"
-          :entry="entry"
-          :origins="origins"
-          :components="components"
-          :destinations="destinations"
-          :originsWithDatasets="originsWithDatasets"
-          :componentsWithDatasets="componentsWithDatasets"
-          :destinationsWithDatasets="destinationsWithDatasets"
-          :availableAnatomyFacets="availableAnatomyFacets"
-          :connectivityError="connectivityError"
-          @connectivity-action-click="onConnectivityActionClick"
-        />
-        <external-resource-card
-          v-if="resources.length"
-          :resources="resources"
-        />
+    <div>
+      <div
+        v-show="showDetails"
+        class="collapse-toggle"
+        id="hide-path-info"
+        @click="showDetails = false"
+      >
+        Hide path information
+        <el-icon><el-icon-arrow-up /></el-icon>
       </div>
-    </transition>
+      <div
+        v-show="!showDetails"
+        class="collapse-toggle"
+        id="show-path-info"
+        @click="showDetails = true"
+      >
+        Show path information
+        <el-icon><el-icon-arrow-down /></el-icon>
+      </div>
+      <transition name="slide-fade">
+        <div v-show="showDetails" class="content-container scrollbar collapse-block">
+          <connectivity-list
+            :key="entry.featureId[0]"
+            :entry="entry"
+            :origins="origins"
+            :components="components"
+            :destinations="destinations"
+            :originsWithDatasets="originsWithDatasets"
+            :componentsWithDatasets="componentsWithDatasets"
+            :destinationsWithDatasets="destinationsWithDatasets"
+            :availableAnatomyFacets="availableAnatomyFacets"
+            :connectivityError="connectivityError"
+            @connectivity-action-click="onConnectivityActionClick"
+          />
+          <external-resource-card
+            v-if="resources.length"
+            :resources="resources"
+          />
+        </div>
+      </transition>
+    </div>
   </div>
 </template>
 
@@ -283,7 +287,6 @@ export default {
 .toggle-button {
   display: flex;
   justify-content: space-between;
-  margin-bottom: 0.5rem;
   padding-right: 0.75rem; // for close button
 
   .is-disabled {
@@ -300,13 +303,15 @@ export default {
   font-size: 18px;
   font-family: Helvetica;
   font-weight: bold;
-  padding-bottom: 8px;
+  padding-right: 0.75rem; // for close button
   color: $app-primary-color;
 }
 
-.block {
-  margin-bottom: 0.5em;
+.subtitle {
+  margin-top: 8px;
+}
 
+.block {
   .main > &:first-of-type {
     margin-right: 1em;
   }
@@ -321,8 +326,11 @@ export default {
 .collapse-toggle {
   color: $app-primary-color;
   cursor: pointer;
-  margin-right: 6px;
-  margin-top: 3px;
+  margin-right: 0.75rem;
+}
+
+.collapse-block {
+  margin-top: 0.5rem;
 }
 
 .main {
@@ -335,6 +343,9 @@ export default {
   padding: 1em !important;
   overflow: hidden;
   min-width: 16rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
 }
 
 .attribute-title-container {
@@ -451,10 +462,6 @@ export default {
 
   .block {
     padding-top: 0.5em;
-  }
-
-  .connectivity-list {
-    padding-top: 1rem;
   }
 }
 
