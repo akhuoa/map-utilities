@@ -135,9 +135,13 @@ async function competencyQuery(options) {
 // Neuron populations that share at least one edge with another neuron population [query id => 23]
 async function queryAllConnectedPaths(flatmapAPI, knowledgeSource, featureId) {
   const featureIds = Array.isArray(featureId) ? featureId : [featureId];
-  // Split into paths (ilx: || ilxtr:) and features (non-ilx: && non-ilxtr:)
-  const pathIds = featureIds.filter(id => id.startsWith('ilxtr:') || id.startsWith('ilx:'));
-  const locationIds = featureIds.filter(id => !id.startsWith('ilxtr:') && !id.startsWith('ilx:'));
+  // Split IDs by prefix: ilx and ilxtr are pathIds, everything else is locationIds.
+  const isPathId = (id) => id.startsWith('ilxtr:') || id.startsWith('ilx:');
+
+  const { pathIds, locationIds } = featureIds.reduce((acc, id) => {
+    acc[isPathId(id) ? 'pathIds' : 'locationIds'].push(id);
+    return acc;
+  }, { pathIds: [], locationIds: [] });
 
   const promises = [];
 
