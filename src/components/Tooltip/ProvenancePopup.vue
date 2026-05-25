@@ -55,11 +55,6 @@
       </div>
       <transition name="slide-fade">
         <div v-show="showNotes" class="block">
-          <div class="attribute-title-container">
-            <div class="attribute-title">
-              Notes
-            </div>
-          </div>
           <div class="alert-block"
             v-for="alert in entry.featuresAlert"
             v-html="formatAlertText(alert)"
