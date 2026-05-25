@@ -283,6 +283,8 @@ export default {
 .toggle-button {
   display: flex;
   justify-content: space-between;
+  margin-bottom: 0.5rem;
+  padding-right: 0.75rem; // for close button
 
   .is-disabled {
     color: #fff !important;
