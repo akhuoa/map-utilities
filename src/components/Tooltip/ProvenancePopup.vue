@@ -41,21 +41,15 @@
     <div class="block" v-else>
       <div class="title">{{ entry.featureId }}</div>
     </div>
-    <div v-if="entry.featuresAlert?.length" class="attribute-title-container">
-      <span class="attribute-title">Notes</span>
-      <el-popover
-        width="250"
-        trigger="hover"
-        :teleported="false"
-        popper-class="popover-origin-help"
-      >
-        <template #reference>
-          <el-icon class="info"><el-icon-warning /></el-icon>
-        </template>
-        <span style="word-break: keep-all">
-          {{ entry.featuresAlert.join(", ") }}
-        </span>
-      </el-popover>
+    <div v-if="entry.featuresAlert?.length" class="block">
+      <div class="attribute-title-container">
+        <div class="attribute-title">
+          Notes
+        </div>
+      </div>
+      <div style="word-break: keep-all">
+        {{ entry.featuresAlert.join(", ") }}
+      </div>
     </div>
     <div
       v-show="showDetails"
