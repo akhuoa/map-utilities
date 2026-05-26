@@ -1,5 +1,6 @@
 <template>
   <div v-if="entry" class="main" v-loading="loading">
+    <!-- Navigation -->
     <div v-if="tooltipEntry.length > 1" class="toggle-button">
       <el-popover width="auto" trigger="hover" :teleported="false">
         <template #reference>
@@ -26,76 +27,91 @@
         <span>{{ nextLabel }}</span>
       </el-popover>
     </div>
-    <div class="block" v-if="entry.title">
-      <div class="title">{{ capitalise(entry.title) }}</div>
+
+    <!-- Title -->
+    <div>
+      <div class="block" v-if="entry.title">
+        <div class="title">{{ capitalise(entry.title) }}</div>
+        <div
+          v-if="
+            entry.provenanceTaxonomyLabel &&
+            entry.provenanceTaxonomyLabel.length > 0
+          "
+          class="subtitle"
+        >
+          {{ provSpeciesDescription }}
+        </div>
+      </div>
+      <div class="block" v-else>
+        <div class="title">{{ entry.featureId }}</div>
+      </div>
+    </div>
+
+    <!-- Alert notes -->
+    <div v-if="entry.featuresAlert?.length">
       <div
-        v-if="
-          entry.provenanceTaxonomyLabel &&
-          entry.provenanceTaxonomyLabel.length > 0
-        "
-        class="subtitle"
+        class="collapse-toggle"
+        id="toggle-notes"
+        @click="showNotes = !showNotes"
       >
-        {{ provSpeciesDescription }}
+        Notes
+        <el-icon>
+          <el-icon-arrow-up v-if="showNotes" />
+          <el-icon-arrow-down v-else />
+        </el-icon>
       </div>
+      <transition name="slide-fade">
+        <div v-show="showNotes" class="block collapse-block">
+          <div class="alert-block"
+            v-for="alert in entry.featuresAlert"
+            v-html="formatAlertText(alert)"
+          ></div>
+        </div>
+      </transition>
     </div>
-    <div class="block" v-else>
-      <div class="title">{{ entry.featureId }}</div>
-    </div>
-    <div v-if="entry.featuresAlert" class="attribute-title-container">
-      <span class="attribute-title">Alert</span>
-      <el-popover
-        width="250"
-        trigger="hover"
-        :teleported="false"
-        popper-class="popover-origin-help"
+
+    <!-- Connectiity info -->
+    <div>
+      <div
+        v-show="showDetails"
+        class="collapse-toggle"
+        id="hide-path-info"
+        @click="showDetails = false"
       >
-        <template #reference>
-          <el-icon class="info"><el-icon-warning /></el-icon>
-        </template>
-        <span style="word-break: keep-all">
-          {{ entry.featuresAlert }}
-        </span>
-      </el-popover>
-    </div>
-    <div
-      v-show="showDetails"
-      class="hide"
-      id="hide-path-info"
-      @click="showDetails = false"
-    >
-      Hide path information
-      <el-icon><el-icon-arrow-up /></el-icon>
-    </div>
-    <div
-      v-show="!showDetails"
-      class="hide"
-      id="show-path-info"
-      @click="showDetails = true"
-    >
-      Show path information
-      <el-icon><el-icon-arrow-down /></el-icon>
-    </div>
-    <transition name="slide-fade">
-      <div v-show="showDetails" class="content-container scrollbar">
-        <connectivity-list
-          :key="entry.featureId[0]"
-          :entry="entry"
-          :origins="origins"
-          :components="components"
-          :destinations="destinations"
-          :originsWithDatasets="originsWithDatasets"
-          :componentsWithDatasets="componentsWithDatasets"
-          :destinationsWithDatasets="destinationsWithDatasets"
-          :availableAnatomyFacets="availableAnatomyFacets"
-          :connectivityError="connectivityError"
-          @connectivity-action-click="onConnectivityActionClick"
-        />
-        <external-resource-card
-          v-if="resources.length"
-          :resources="resources"
-        />
+        Hide path information
+        <el-icon><el-icon-arrow-up /></el-icon>
       </div>
-    </transition>
+      <div
+        v-show="!showDetails"
+        class="collapse-toggle"
+        id="show-path-info"
+        @click="showDetails = true"
+      >
+        Show path information
+        <el-icon><el-icon-arrow-down /></el-icon>
+      </div>
+      <transition name="slide-fade">
+        <div v-show="showDetails" class="content-container scrollbar collapse-block">
+          <connectivity-list
+            :key="entry.featureId[0]"
+            :entry="entry"
+            :origins="origins"
+            :components="components"
+            :destinations="destinations"
+            :originsWithDatasets="originsWithDatasets"
+            :componentsWithDatasets="componentsWithDatasets"
+            :destinationsWithDatasets="destinationsWithDatasets"
+            :availableAnatomyFacets="availableAnatomyFacets"
+            :connectivityError="connectivityError"
+            @connectivity-action-click="onConnectivityActionClick"
+          />
+          <external-resource-card
+            v-if="resources.length"
+            :resources="resources"
+          />
+        </div>
+      </transition>
+    </div>
   </div>
 </template>
 
@@ -129,6 +145,7 @@ export default {
     return {
       loading: false,
       showDetails: false,
+      showNotes: false,
       originDescriptions: {
         motor: "is the location of the initial cell body of the circuit",
         sensory: "is the location of the initial cell body in the PNS circuit",
@@ -192,6 +209,7 @@ export default {
       handler: function (newVal, oldVal) {
         if (newVal !== oldVal) {
           this.entryIndex = 0;
+          this.showNotes = false;
         }
       },
     },
@@ -229,6 +247,38 @@ export default {
         this.availableAnatomyFacets = JSON.parse(availableAnatomyFacets);
       }
     },
+    formatAlertText: function (text) {
+      if (!text) return '';
+      const escaped = text
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;');
+      const linkified = escaped.replace(
+        /(https?:\/\/[^\s"<>\[]+)/g,
+        (url) => {
+          const parts = url.match(/^(.*?)([\].,;:!?]*)$/);
+          const cleanUrl = parts ? parts[1] : url;
+          const suffix = parts ? parts[2] : '';
+          return `<a href="${cleanUrl}" target="_blank" rel="noopener noreferrer">${cleanUrl}</a>${suffix}`;
+        }
+      );
+
+      const normalised = linkified
+        .replace(/\\n/g, '\n')
+        .replace(/\r\n/g, '\n')
+        .replace(/\r/g, '\n');
+
+      return normalised
+        .split('\n')
+        .map((line) => {
+          const withBoldLabel = line.replace(
+            /^\s*([A-Za-z][^:<]{0,120}:)/,
+            '<strong>$1</strong>'
+          );
+          return `<div class="alert-line">${withBoldLabel}</div>`;
+        })
+        .join('\n');
+    },
   },
 };
 </script>
@@ -237,6 +287,7 @@ export default {
 .toggle-button {
   display: flex;
   justify-content: space-between;
+  padding-right: 0.75rem; // for close button
 
   .is-disabled {
     color: #fff !important;
@@ -252,13 +303,15 @@ export default {
   font-size: 18px;
   font-family: Helvetica;
   font-weight: bold;
-  padding-bottom: 8px;
+  padding-right: 0.75rem; // for close button
   color: $app-primary-color;
 }
 
-.block {
-  margin-bottom: 0.5em;
+.subtitle {
+  margin-top: 8px;
+}
 
+.block {
   .main > &:first-of-type {
     margin-right: 1em;
   }
@@ -270,11 +323,14 @@ export default {
   margin-left: 8px;
 }
 
-.hide {
+.collapse-toggle {
   color: $app-primary-color;
   cursor: pointer;
-  margin-right: 6px;
-  margin-top: 3px;
+  margin-right: 0.75rem;
+}
+
+.collapse-block {
+  margin-top: 0.5rem;
 }
 
 .main {
@@ -287,6 +343,9 @@ export default {
   padding: 1em !important;
   overflow: hidden;
   min-width: 16rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
 }
 
 .attribute-title-container {
@@ -376,6 +435,26 @@ export default {
   }
 }
 
+.alert-block {
+  background-color: var(--el-color-warning-light-9);
+  border: 1px dashed var(--el-color-warning);
+  padding: 0.75rem;
+  border-radius: 4px;
+
+  :deep(.alert-line + .alert-line) {
+    margin-top: 0.5rem;
+  }
+
+  :deep(a) {
+    color: $app-primary-color;
+    word-break: break-all;
+
+    &:hover {
+      opacity: 0.8;
+    }
+  }
+}
+
 .content-container {
   overflow-y: scroll;
   scrollbar-width: thin !important;
@@ -383,10 +462,6 @@ export default {
 
   .block {
     padding-top: 0.5em;
-  }
-
-  .connectivity-list {
-    padding-top: 1rem;
   }
 }
 
