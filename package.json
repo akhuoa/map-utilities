@@ -38,10 +38,10 @@
   },
   "dependencies": {
     "@abi-software/svg-sprite": "1.1.0",
-    "@element-plus/icons-vue": "^2.3.1",
+    "@element-plus/icons-vue": "^2.3.2",
     "cytoscape": "^3.30.2",
     "cytoscape-dagre": "^2.5.0",
-    "element-plus": "2.8.4",
+    "element-plus": "^2.14.4",
     "mitt": "^3.0.1",
     "vue": "^3.4.21"
   },
