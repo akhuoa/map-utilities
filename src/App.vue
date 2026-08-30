@@ -39,18 +39,15 @@ const drawnTypes = [
   { value: "None", label: "None" },
 ];
 const showConnectivityGraph = ref(false);
-const connectivityGraphEntry = ref("ilxtr:neuron-type-aacar-13");
+const connectivityGraphEntry = ref("ilxtr:neuron-type-aacar-12");
 const connectivityGraphEntries = [
-  "ilxtr:neuron-type-aacar-13",
-  "ilxtr:sparc-nlp/kidney/134",
-  "ilxtr:neuron-type-aacar-11",
-  "ilxtr:neuron-type-sstom-14",
-  "ilxtr:neuron-type-keast-6",
-  "ilxtr:neuron-type-aacar-4",
   "ilxtr:neuron-type-aacar-12",
+  "ilxtr:sparc-nlp/kidney/132",
+  "ilxtr:neuron-type-sstom-10",
+  "ilxtr:neuron-type-keast-1",
 ];
-const mapServer = "https://mapcore-demo.org/curation/flatmap/";
-const sckanVersion = "sckan-2024-09-21-npo";
+const mapServer = "https://mapcore-demo.org/devel/flatmap/v4/";
+const sckanVersion = "sckan-2026-02-11";
 
 onMounted(() => {
   console.log("🚀 ~ onMounted ~ appRef:", appRef.value);

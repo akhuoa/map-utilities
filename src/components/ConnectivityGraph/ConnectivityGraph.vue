@@ -111,9 +111,9 @@
     </div>
 
     <!-- The error message shown in tooltip for single connectivity list view -->
-    <div v-show="!hasSingleConnectivityList && connectivityError.errorConnectivities" class="connectivity-graph-error">
-      <strong>{{ connectivityError.errorConnectivities }}</strong>
-      {{ connectivityError.errorMessage }}
+    <div v-show="!hasSingleConnectivityList && connectivityError?.errorConnectivities" class="connectivity-graph-error">
+      <strong>{{ connectivityError?.errorConnectivities }}</strong>
+      {{ connectivityError?.errorMessage }}
     </div>
 
     <div v-if="loadingError" class="loading-error">
