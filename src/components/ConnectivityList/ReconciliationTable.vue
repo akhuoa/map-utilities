@@ -162,6 +162,7 @@ export default {
 .reconciliation-table {
 	overflow: hidden;
 	font-size: 14px;
+  font-family: $font-family;
 }
 
 .reconciliation-table-inner {

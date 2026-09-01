@@ -49,5 +49,6 @@ export default {
   display: flex;
   justify-content: center;
   align-items: center;
+  font-family: $font-family;
 }
 </style>

@@ -638,7 +638,7 @@ export default {
   font-size: 14px;
   text-align: left;
   line-height: 1.5em;
-  font-family: Asap, sans-serif, Helvetica;
+  font-family: $font-family;
   font-weight: 400;
   /* outline: thin red solid; */
   padding: 1em !important;

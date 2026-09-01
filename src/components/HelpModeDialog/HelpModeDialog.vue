@@ -243,7 +243,7 @@ export default {
   gap: 1rem;
   width: 300px;
   padding: 1rem;
-  font-family: inherit;
+  font-family: $font-family;
   font-size: 14px;
   background: white;
   border-radius: 4px 4px;

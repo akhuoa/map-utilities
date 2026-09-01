@@ -301,7 +301,7 @@ export default {
   // width: 16em;
   line-height: 1.5em !important;
   font-size: 18px;
-  font-family: Helvetica;
+  font-family: $font-family;
   font-weight: bold;
   padding-right: 0.75rem; // for close button
   color: $app-primary-color;
@@ -337,7 +337,7 @@ export default {
   font-size: 14px;
   text-align: left;
   line-height: 1.5em;
-  font-family: Asap, sans-serif, Helvetica;
+  font-family: $font-family;
   font-weight: 400;
   /* outline: thin red solid; */
   padding: 1em !important;

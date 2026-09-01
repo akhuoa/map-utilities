@@ -668,3 +668,9 @@ function confirmCreate(value) {
   margin-left: 12px;
 }
 </style>
+
+<style lang="scss">
+body {
+	font-family: $font-family;
+}
+</style>

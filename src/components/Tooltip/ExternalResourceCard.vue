@@ -598,6 +598,7 @@ export default {
 <style lang="scss" scoped>
 .resource-container {
   margin-top: 1em;
+  font-family: $font-family;
 
   &:hover {
     .attribute-title-container :deep(.copy-clipboard-button) {

@@ -102,6 +102,7 @@ export default {
   display: flex;
   flex-direction: column;
   padding: 0.8em;
+  font-family: $font-family;
 }
 
 .dialog-title {

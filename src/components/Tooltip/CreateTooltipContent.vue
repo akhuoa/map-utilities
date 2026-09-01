@@ -263,7 +263,7 @@ export default {
 
 .create-container {
   width: 320px;
-
+  font-family: $font-family;
   height: auto;
   border-radius: 4px;
   border: solid 1px #d8dce6;
@@ -292,7 +292,7 @@ export default {
     padding: 7px;
 
     .suggested-value {
-      font-family: "Asap", sans-serif;
+      font-family: $font-family;
       text-align: left;
       white-space: initial;
     }

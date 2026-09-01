@@ -624,5 +624,6 @@ export default {
   --el-color-primary-light-5: #cd99e5;
   --el-color-primary-light-9: #f3e6f9;
   --el-color-primary-dark-2: var(--el-color-primary);
+  font-family: $font-family;
 }
 </style>
