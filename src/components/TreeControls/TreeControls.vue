@@ -285,6 +285,7 @@ export default {
 .selections-container {
   width: 260px;
   padding-top: 5px;
+	font-family: $font-family;
 }
 
 .title-text {

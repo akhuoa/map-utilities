@@ -1,5 +1,6 @@
 import { createApp } from "vue";
 import App from "./App.vue";
+import "./assets/fonts.scss";
 
 import DrawToolbar from "./components/DrawToolbar/DrawToolbar.vue";
 import HelpModeDialog from "./components/HelpModeDialog/HelpModeDialog.vue";

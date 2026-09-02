@@ -770,6 +770,7 @@ export default {
 .connectivity-graph {
   box-shadow: 0 2px 12px 0 rgba(0, 0, 0, 0.06);
   border: solid 1px #e4e7ed;
+  font-family: $font-family;
 }
 
 .control-panel {

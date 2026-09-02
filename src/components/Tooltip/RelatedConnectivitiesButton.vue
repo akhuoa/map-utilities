@@ -25,6 +25,7 @@ export default {
 <style lang="scss" scoped>
 .reference-button-container {
   margin-top: 0.5rem;
+  font-family: $font-family;
 }
 
 .reference-icon-button {

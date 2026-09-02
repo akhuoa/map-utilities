@@ -33,6 +33,7 @@ import {
   fetchLabels,
   getFlatmapFilterOptions,
 } from "./CompetencyQueries/knowledgeQueries.js";
+import "../assets/fonts.scss";
 
 export {
   AnnotationPopup,
