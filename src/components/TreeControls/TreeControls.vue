@@ -41,6 +41,8 @@
         show-checkbox
         :node-key="nodeKey"
         :data="treeData"
+        :check-on-click-node="checkOnClickNode"
+        :check-on-click-leaf="checkOnClickNode"
         :check-strictly="false"
         :expand-on-click-node="false"
         :render-after-expand="false"
@@ -103,6 +105,10 @@
 export default {
   name: "TreeControls",
   props: {
+    checkOnClickNode: {
+      type: Boolean,
+      default: false,
+    },
     /**
      * The type of map that the TreeControls is used. Either "flatmap" or "scaffold".
      */
