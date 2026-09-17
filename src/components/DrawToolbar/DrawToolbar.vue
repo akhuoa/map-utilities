@@ -146,8 +146,8 @@
 
 <script>
 /* eslint-disable no-alert, no-console */
-import { MapSvgIcon, MapSvgSpriteColor } from "@abi-software/svg-sprite";
-import "@abi-software/svg-sprite/dist/style.css";
+import { MapSvgIcon, MapSvgSpriteColor } from '@abi-software/svg-sprite';
+import '@abi-software/svg-sprite/dist/style.css';
 
 /**
  * @param scopeElement    Draggable scope area (Optional)
@@ -156,13 +156,13 @@ import "@abi-software/svg-sprite/dist/style.css";
 const draggable = (scopeElement, dragElement) => {
   let startX, startY, clickX, clickY, posX, posY;
   // reset position in case previous popped up dialog is dragged
-  dragElement.style.left = "";
-  dragElement.style.top = "";
+  dragElement.style.left = '';
+  dragElement.style.top = '';
   // const scopeRect = scopeElement.getBoundingClientRect()
   // const dragRect = dragElement.getBoundingClientRect()
 
   dragElement.addEventListener(
-    "mousedown",
+    'mousedown',
     (e) => {
       e.preventDefault();
       startX = dragElement.offsetLeft;
@@ -170,16 +170,16 @@ const draggable = (scopeElement, dragElement) => {
       clickX = e.clientX;
       clickY = e.clientY;
 
-      dragElement.addEventListener("mousemove", drag, false);
+      dragElement.addEventListener('mousemove', drag, false);
       document.addEventListener(
-        "mouseup",
+        'mouseup',
         () => {
-          dragElement.removeEventListener("mousemove", drag, false);
+          dragElement.removeEventListener('mousemove', drag, false);
         },
-        false
+        false,
       );
     },
-    false
+    false,
   );
 
   function drag(e) {
@@ -208,7 +208,7 @@ const draggable = (scopeElement, dragElement) => {
 };
 
 export default {
-  name: "DrawToolbar",
+  name: 'DrawToolbar',
   components: {
     MapSvgIcon,
     MapSvgSpriteColor,
@@ -236,14 +236,7 @@ export default {
      */
     toolbarOptions: {
       type: Array,
-      default: [
-        "Edit",
-        "Delete",
-        "Point",
-        "LineString",
-        "Polygon",
-        "Connection",
-      ],
+      default: ['Edit', 'Delete', 'Point', 'LineString', 'Polygon', 'Connection'],
     },
     /**
      * Optional
@@ -253,7 +246,7 @@ export default {
      */
     drawnType: {
       type: String,
-      default: "All tools",
+      default: 'All tools',
     },
     activeDrawTool: {
       required: true,
@@ -296,24 +289,24 @@ export default {
       type: Array,
       required: true,
       default: [
-        { value: false, ref: "editPopover" },
-        { value: false, ref: "deletePopover" },
-        { value: false, ref: "pointPopover" },
-        { value: false, ref: "lineStringPopover" },
-        { value: false, ref: "polygonPopover" },
-        { value: false, ref: "connectionPopover" },
+        { value: false, ref: 'editPopover' },
+        { value: false, ref: 'deletePopover' },
+        { value: false, ref: 'pointPopover' },
+        { value: false, ref: 'lineStringPopover' },
+        { value: false, ref: 'polygonPopover' },
+        { value: false, ref: 'connectionPopover' },
       ],
     },
   },
   data: function () {
     return {
       toolbarIcons: [
-        { name: "Edit", active: false, disabled: false, type: "mode" },
-        { name: "Delete", active: false, disabled: false, type: "mode" },
-        { name: "Point", active: false, disabled: false, type: "tool" },
-        { name: "LineString", active: false, disabled: false, type: "tool" },
-        { name: "Polygon", active: false, disabled: false, type: "tool" },
-        { name: "Connection", active: false, disabled: true, type: "conn" },
+        { name: 'Edit', active: false, disabled: false, type: 'mode' },
+        { name: 'Delete', active: false, disabled: false, type: 'mode' },
+        { name: 'Point', active: false, disabled: false, type: 'tool' },
+        { name: 'LineString', active: false, disabled: false, type: 'tool' },
+        { name: 'Polygon', active: false, disabled: false, type: 'tool' },
+        { name: 'Connection', active: false, disabled: true, type: 'conn' },
       ],
       connectionDisplay: false,
       dialogPosition: {
@@ -326,37 +319,37 @@ export default {
   },
   computed: {
     showAllToolIcons: function () {
-      return this.drawnType === "All tools" || this.drawnType === "None";
+      return this.drawnType === 'All tools' || this.drawnType === 'None';
     },
     showEditModeIcon: function () {
-      return this.toolbarOptions.includes("Edit");
+      return this.toolbarOptions.includes('Edit');
     },
     showDeleteModeIcon: function () {
-      return this.toolbarOptions.includes("Delete");
+      return this.toolbarOptions.includes('Delete');
     },
     showDrawPointIcon: function () {
       return (
-        this.toolbarOptions.includes("Point") &&
-        (this.showAllToolIcons || this.drawnType === "Point")
+        this.toolbarOptions.includes('Point') &&
+        (this.showAllToolIcons || this.drawnType === 'Point')
       );
     },
     showDrawLineStringIcon: function () {
       return (
-        this.toolbarOptions.includes("LineString") &&
-        (this.showAllToolIcons || this.drawnType === "LineString")
+        this.toolbarOptions.includes('LineString') &&
+        (this.showAllToolIcons || this.drawnType === 'LineString')
       );
     },
     showDrawPolygonIcon: function () {
       return (
-        this.toolbarOptions.includes("Polygon") &&
-        (this.showAllToolIcons || this.drawnType === "Polygon")
+        this.toolbarOptions.includes('Polygon') &&
+        (this.showAllToolIcons || this.drawnType === 'Polygon')
       );
     },
     showConnectionIcon: function () {
       return (
-        this.toolbarOptions.includes("Connection") &&
-        this.toolbarOptions.includes("LineString") &&
-        (this.showAllToolIcons || this.drawnType === "LineString")
+        this.toolbarOptions.includes('Connection') &&
+        this.toolbarOptions.includes('LineString') &&
+        (this.showAllToolIcons || this.drawnType === 'LineString')
       );
     },
     inDrawing: function () {
@@ -374,13 +367,13 @@ export default {
       this.disabledToolbarConnectionIcon(true);
     },
     activeDrawMode: function (value) {
-      this.updateToolbarIcons(value, "mode");
-      if (value === "Delete") {
+      this.updateToolbarIcons(value, 'mode');
+      if (value === 'Delete') {
         this.connectionDisplay = false;
       }
     },
     activeDrawTool: function (value) {
-      this.updateToolbarIcons(value, "tool");
+      this.updateToolbarIcons(value, 'tool');
       if (!value) {
         this.connectionDisplay = false;
       }
@@ -401,7 +394,7 @@ export default {
       if (value) {
         this.dialogCssHacks();
       } else {
-        this.$emit("featureTooltip", undefined);
+        this.$emit('featureTooltip', undefined);
       }
     },
     dialogPosition: {
@@ -421,17 +414,17 @@ export default {
     modeClickEvent: function (type) {
       if (!this.iconDisabled(type)) {
         const drawMode = this.activeDrawMode === type ? undefined : type;
-        this.$emit("clickToolbar", "mode", drawMode);
+        this.$emit('clickToolbar', 'mode', drawMode);
       }
     },
     toolClickEvent: function (type) {
       if (!this.iconDisabled(type)) {
         const drawTool = this.activeDrawTool === type ? undefined : type;
-        this.$emit("clickToolbar", "tool", drawTool);
+        this.$emit('clickToolbar', 'tool', drawTool);
       }
     },
     connectionClickEvent: function () {
-      if (!this.iconDisabled("Connection") && !this.newlyDrawnExist) {
+      if (!this.iconDisabled('Connection') && !this.newlyDrawnExist) {
         this.connectionDisplay = !this.connectionDisplay;
       }
     },
@@ -444,7 +437,7 @@ export default {
         }
       });
       this.toolbarIcons
-        .filter((icon) => icon.type !== "conn")
+        .filter((icon) => icon.type !== 'conn')
         .filter((icon) => icon.type !== type)
         .map((icon) => {
           if (value) {
@@ -457,7 +450,7 @@ export default {
     },
     disabledToolbarConnectionIcon: function (value) {
       this.toolbarIcons
-        .filter((icon) => icon.type === "conn")
+        .filter((icon) => icon.type === 'conn')
         .map((icon) => {
           if (value) {
             icon.disabled = true;
@@ -465,7 +458,7 @@ export default {
             icon.disabled = false;
           }
           // Disable connection icon when delete mode is on
-          if (this.activeDrawMode === "Delete") {
+          if (this.activeDrawMode === 'Delete') {
             icon.disabled = true;
           }
         });
@@ -473,7 +466,7 @@ export default {
     },
     activeToolbarConnectionIcon: function (value) {
       this.toolbarIcons
-        .filter((icon) => icon.type === "conn")
+        .filter((icon) => icon.type === 'conn')
         .map((icon) => {
           if (value) {
             icon.active = true;
@@ -489,14 +482,14 @@ export default {
           const iconElement = this.$el.querySelector(`.draw${icon.name}`);
           if (iconElement) {
             if (icon.active) {
-              iconElement.classList.add("active");
+              iconElement.classList.add('active');
             } else {
-              iconElement.classList.remove("active");
+              iconElement.classList.remove('active');
             }
             if (icon.disabled) {
-              iconElement.classList.add("disabled");
+              iconElement.classList.add('disabled');
             } else {
-              iconElement.classList.remove("disabled");
+              iconElement.classList.remove('disabled');
             }
           }
         });
@@ -504,13 +497,12 @@ export default {
     },
     dialogCssHacks: function () {
       this.$nextTick(() => {
-        const dialog = this.$el.querySelector(".connection-dialog");
+        const dialog = this.$el.querySelector('.connection-dialog');
         draggable(this.mapCanvas.containerHTML, dialog);
         // dialog popup at the click position
         // slightly change x or y if close to boundary
         let posX, posY;
-        const containerRect =
-          this.mapCanvas.containerHTML.getBoundingClientRect();
+        const containerRect = this.mapCanvas.containerHTML.getBoundingClientRect();
         const dialogRect = dialog.getBoundingClientRect();
         if (this.dialogPosition.x > containerRect.width / 2) {
           posX = this.dialogPosition.x - dialogRect.width;
@@ -531,16 +523,16 @@ export default {
       return this.hoverVisibilities.findIndex((item) => item.ref === value);
     },
     showTooltip: function (tooltipNumber) {
-      this.$emit("showTooltip", tooltipNumber);
+      this.$emit('showTooltip', tooltipNumber);
     },
     hideTooltip: function (tooltipNumber) {
-      this.$emit("hideTooltip", tooltipNumber);
+      this.$emit('hideTooltip', tooltipNumber);
     },
     dialogPopUpPositionHandler: function (e) {
       e.preventDefault();
       this.dialogPosition.x = e.clientX;
       this.dialogPosition.y = e.clientY;
-      if (this.activeDrawTool === "Point") {
+      if (this.activeDrawTool === 'Point') {
         this.dialogCssHacks();
       }
     },
@@ -551,7 +543,7 @@ export default {
       if (this.mapCanvas) {
         this.mapCanvas.containerHTML
           .querySelector(this.mapCanvas.class)
-          .addEventListener("click", this.dialogPopUpPositionHandler, false);
+          .addEventListener('click', this.dialogPopUpPositionHandler, false);
       }
     });
   },
@@ -559,7 +551,7 @@ export default {
     if (this.mapCanvas) {
       this.mapCanvas.containerHTML
         .querySelector(this.mapCanvas.class)
-        .removeEventListener("click", this.dialogPopUpPositionHandler, false);
+        .removeEventListener('click', this.dialogPopUpPositionHandler, false);
     }
   },
 };
