@@ -145,7 +145,6 @@
 </template>
 
 <script>
-/* eslint-disable no-alert, no-console */
 import { MapSvgIcon, MapSvgSpriteColor } from '@abi-software/svg-sprite';
 import '@abi-software/svg-sprite/dist/style.css';
 

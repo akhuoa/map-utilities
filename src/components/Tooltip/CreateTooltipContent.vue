@@ -74,7 +74,6 @@
 </template>
 
 <script>
-/* eslint-disable no-alert, no-console */
 import {
   ElAutocomplete as Autocomplete,
   ElButton as Button,
