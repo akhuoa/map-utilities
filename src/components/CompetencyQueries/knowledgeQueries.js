@@ -366,7 +366,7 @@ async function getFlatmapFilterOptions(flatmapAPI, mapImp, providedKnowledge, pr
     };
 
     for (const facet of ['origin', 'via', 'destination', 'all']) {
-      let childrenList = [];
+      let childrenList;
       if (facet === 'origin') {
         childrenList = originItems.map((item) => transformItem(facet, item));
       } else if (facet === 'via') {

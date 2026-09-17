@@ -135,7 +135,7 @@ export default {
     },
     selectedConnectivityData: {
       type: Array,
-      default: [],
+      default: () => [],
     },
     connectivityFromMap: {
       type: Object,
@@ -368,7 +368,7 @@ export default {
             this.hideSpinner();
           }
         })
-        .catch((error) => {
+        .catch(() => {
           this.loadingError = 'Loading error!';
           this.hideSpinner();
         });

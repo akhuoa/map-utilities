@@ -150,7 +150,7 @@ export default {
       this.hoveredGroupIndex = groupIndex;
       this.$emit('row-hovered', item, event, false);
     },
-    onSourceLeave(item) {
+    onSourceLeave(_item) {
       this.hoveredGroupIndex = null;
       this.$emit('row-hovered');
     },

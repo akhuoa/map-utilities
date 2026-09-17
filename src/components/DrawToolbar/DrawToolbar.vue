@@ -235,7 +235,7 @@ export default {
      */
     toolbarOptions: {
       type: Array,
-      default: ['Edit', 'Delete', 'Point', 'LineString', 'Polygon', 'Connection'],
+      default: () => ['Edit', 'Delete', 'Point', 'LineString', 'Polygon', 'Connection'],
     },
     /**
      * Optional
@@ -261,7 +261,7 @@ export default {
      */
     newlyDrawnEntry: {
       type: Object,
-      default: {},
+      default: () => ({}),
     },
     /**
      * Optional
@@ -271,7 +271,7 @@ export default {
      */
     connectionEntry: {
       type: Object,
-      default: {},
+      default: () => ({}),
     },
     /**
      * Add following to the top hoverVisibilities array to enable tooltips for each icon.
@@ -287,7 +287,7 @@ export default {
     hoverVisibilities: {
       type: Array,
       required: true,
-      default: [
+      default: () => [
         { value: false, ref: 'editPopover' },
         { value: false, ref: 'deletePopover' },
         { value: false, ref: 'pointPopover' },
@@ -546,7 +546,7 @@ export default {
       }
     });
   },
-  destroyed: function () {
+  unmounted: function () {
     if (this.mapCanvas) {
       this.mapCanvas.containerHTML
         .querySelector(this.mapCanvas.class)

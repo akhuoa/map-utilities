@@ -10,7 +10,7 @@
       <el-row class="row" v-show="showPoint">
         <el-col :offset="0" :span="8">Position:</el-col>
         <el-col :offset="0" :span="16">
-          <el-row v-for="{ value, i } in createData.points" :key="i" class="value">
+          <el-row v-for="{ i } in createData.points" :key="i" class="value">
             {{ i }}
           </el-row>
         </el-col>
@@ -74,34 +74,12 @@
 </template>
 
 <script>
-import {
-  ElAutocomplete as Autocomplete,
-  ElButton as Button,
-  ElCol as Col,
-  ElContainer as Container,
-  ElHeader as Header,
-  ElInput as Input,
-  ElMain as Main,
-} from 'element-plus';
-
-/**
- * A component to control the opacity of the target object.
- */
 export default {
   name: 'CreateTooltipContent',
-  components: {
-    Autocomplete,
-    Button,
-    Col,
-    Container,
-    Header,
-    Input,
-    Main,
-  },
   props: {
     createData: {
       type: Object,
-      default: {
+      default: () => ({
         drawingBox: false,
         renaming: false,
         toBeConfirmed: false,
@@ -114,7 +92,7 @@ export default {
         faceIndex: -1,
         toBeDeleted: false,
         regionPrefix: '__annotation',
-      },
+      }),
     },
   },
   watch: {

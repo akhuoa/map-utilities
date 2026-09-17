@@ -8,9 +8,9 @@
       :teleported="true"
       :append-to="connectivityListContainer"
       placement="bottom-start"
-      :visible="connectivityError.hasError && !!connectivityError.errorMessage"
+      :visible="displayedError.hasError && !!displayedError.errorMessage"
       :popper-class="
-        connectivityError.errorType === 'warning'
+        displayedError.errorType === 'warning'
           ? 'connectivity-warning-container'
           : 'connectivity-error-container'
       "
@@ -22,7 +22,7 @@
         ></div>
       </template>
       <template #default>
-        <span v-html="connectivityError.errorMessage"></span>
+        <span v-html="displayedError.errorMessage"></span>
       </template>
     </el-popover>
 
@@ -142,15 +142,11 @@
 
 <script>
 import { Warning as ElIconWarning } from '@element-plus/icons-vue';
-import { ElButton as Button, ElContainer as Container, ElIcon as Icon } from 'element-plus';
 import ReconciliationTable from './ReconciliationTable.vue';
 
 export default {
   name: 'ConnectivityReconciliationList',
   components: {
-    Button,
-    Container,
-    Icon,
     ElIconWarning,
     ReconciliationTable,
   },
@@ -227,6 +223,11 @@ export default {
       facetList: [],
       clearErrorTimeout: null,
       connectivityListContainer: null,
+      hoverError: {
+        errorType: '',
+        errorMessage: '',
+        hasError: false,
+      },
     };
   },
   watch: {
@@ -260,6 +261,16 @@ export default {
     // Group destinations by mapId
     groupedDestinations: function () {
       return this.groupCombinationsByMapId(this.destinationsCombinations);
+    },
+    displayedError: function () {
+      if (this.hoverError.hasError) {
+        return this.hoverError;
+      }
+      return {
+        hasError: !!this.connectivityError?.hasError,
+        errorType: this.connectivityError?.errorType || '',
+        errorMessage: this.connectivityError?.errorMessage || '',
+      };
     },
   },
   methods: {
@@ -339,16 +350,16 @@ export default {
 
       if (newError.hasError) {
         // Show new error immediately with content
-        this.connectivityError.errorType = newError.errorType;
-        this.connectivityError.errorMessage = newError.errorMessage;
-        this.connectivityError.hasError = true;
+        this.hoverError.errorType = newError.errorType;
+        this.hoverError.errorMessage = newError.errorMessage;
+        this.hoverError.hasError = true;
       } else {
         // Hide the popover immediately, then clear content after transition (~300ms)
         // so the popover fades out with content still visible (not as empty box)
-        this.connectivityError.hasError = false;
+        this.hoverError.hasError = false;
         this.clearErrorTimeout = setTimeout(() => {
-          this.connectivityError.errorType = '';
-          this.connectivityError.errorMessage = '';
+          this.hoverError.errorType = '';
+          this.hoverError.errorMessage = '';
           this.clearErrorTimeout = null;
         }, 350);
       }

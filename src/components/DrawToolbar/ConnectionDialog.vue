@@ -48,7 +48,7 @@ export default {
   props: {
     connectionEntry: {
       type: Object,
-      default: {},
+      default: () => ({}),
     },
     inDrawing: {
       type: Boolean,

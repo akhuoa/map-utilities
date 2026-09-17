@@ -362,7 +362,7 @@ export default {
               reference.citation[citationType] = formattedText;
               this.updateCopyContents();
             })
-            .catch((error) => {
+            .catch(() => {
               reference.citation['error'] = {
                 type: citationType,
                 ref: 'doi',
@@ -385,7 +385,7 @@ export default {
                       reference.citation[citationType] = formattedText;
                       this.updateCopyContents();
                     })
-                    .catch((error) => {
+                    .catch(() => {
                       reference.citation['error'] = {
                         type: citationType,
                         ref: 'doi',
@@ -406,7 +406,7 @@ export default {
                 }
               }
             })
-            .catch((error) => {
+            .catch(() => {
               reference.citation['error'] = {
                 type: citationType,
                 ref: 'pubmed',
@@ -574,11 +574,11 @@ export default {
           return await response.json();
         }
       } catch (error) {
-        throw new Error(error);
+        throw new Error(error, { cause: error });
       }
     },
     onCopied: function (event, reference) {
-      let category = 'Reference List';
+      let category;
       let doi = '';
       let citationType = this.citationType;
 

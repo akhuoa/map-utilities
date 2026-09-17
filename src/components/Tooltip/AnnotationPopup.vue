@@ -242,6 +242,7 @@ export default {
       if (models && models.startsWith('UBERON')) {
         return `http://purl.obolibrary.org/obo/${this.entry.models.replace(':', '_')}`;
       }
+      return '';
     },
     updatedCopyContent: function () {
       return this.getUpdateCopyContent();
@@ -447,7 +448,7 @@ export default {
 
       if (this.prevSubs.length) {
         let annotationContent = '<div><strong>Annotations:</strong></div>\n<br>';
-        this.prevSubs.map((sub, index) => {
+        this.prevSubs.map((sub) => {
           if (sub.creator) {
             annotationContent += `<div><strong>Created:</strong>${this.formatTime(sub.created)}</div>\n<br>`;
             annotationContent += `<div><strong>Creator:</strong>${sub.creator.name}</div>\n<br>`;

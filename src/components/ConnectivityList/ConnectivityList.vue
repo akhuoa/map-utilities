@@ -37,7 +37,7 @@
         </el-popover>
       </div>
       <div
-        v-for="(origin, i) in origins"
+        v-for="origin in origins"
         class="attribute-content"
         :origin-item-label="origin"
         :key="origin"
@@ -81,7 +81,7 @@
         <span class="attribute-title">Components</span>
       </div>
       <div
-        v-for="(component, i) in components"
+        v-for="component in components"
         class="attribute-content"
         :component-item-label="component"
         :key="component"
@@ -127,7 +127,7 @@
         </el-popover>
       </div>
       <div
-        v-for="(destination, i) in destinations"
+        v-for="destination in destinations"
         class="attribute-content"
         :destination-item-label="destination"
         :key="destination"
@@ -179,17 +179,12 @@
 </template>
 
 <script>
-import { shallowRef } from 'vue';
 import { Warning as ElIconWarning, Search as ElIconSearch } from '@element-plus/icons-vue';
-import { ElButton as Button, ElContainer as Container, ElIcon as Icon } from 'element-plus';
 import { capitalise } from '../utilities';
 
 export default {
   name: 'ConnectivityList',
   components: {
-    Button,
-    Container,
-    Icon,
     ElIconWarning,
     ElIconSearch,
   },

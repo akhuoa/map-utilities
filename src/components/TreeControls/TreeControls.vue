@@ -172,6 +172,7 @@ export default {
       } else if (this.isScaffold) {
         return 'id';
       }
+      return undefined;
     },
     expandedKeys: function () {
       if (this.isFlatmap) {
@@ -179,6 +180,7 @@ export default {
       } else if (this.isScaffold) {
         return [];
       }
+      return [];
     },
   },
   watch: {

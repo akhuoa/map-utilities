@@ -53,7 +53,8 @@
         <div v-show="showNotes" class="block collapse-block">
           <div
             class="alert-block"
-            v-for="alert in entry.featuresAlert"
+            v-for="(alert, index) in entry.featuresAlert"
+            :key="index"
             v-html="formatAlertText(alert)"
           ></div>
         </div>
@@ -106,7 +107,6 @@
 import {
   ArrowUp as ElIconArrowUp,
   ArrowDown as ElIconArrowDown,
-  Warning as ElIconWarning,
 } from '@element-plus/icons-vue';
 import EventBus from '../EventBus.js';
 import ConnectivityList from '../ConnectivityList/ConnectivityList.vue';
@@ -118,14 +118,13 @@ export default {
   components: {
     ElIconArrowUp,
     ElIconArrowDown,
-    ElIconWarning,
     ConnectivityList,
     ExternalResourceCard,
   },
   props: {
     tooltipEntry: {
       type: Array,
-      default: [],
+      default: () => [],
     },
   },
   data: function () {
@@ -235,7 +234,7 @@ export default {
     formatAlertText: function (text) {
       if (!text) return '';
       const escaped = text.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
-      const linkified = escaped.replace(/(https?:\/\/[^\s"<>\[]+)/g, (url) => {
+      const linkified = escaped.replace(/(https?:\/\/[^\s"<>\x5b]+)/g, (url) => {
         const parts = url.match(/^(.*?)([\].,;:!?]*)$/);
         const cleanUrl = parts ? parts[1] : url;
         const suffix = parts ? parts[2] : '';
