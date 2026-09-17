@@ -104,10 +104,7 @@
 </template>
 
 <script>
-import {
-  ArrowUp as ElIconArrowUp,
-  ArrowDown as ElIconArrowDown,
-} from '@element-plus/icons-vue';
+import { ArrowUp as ElIconArrowUp, ArrowDown as ElIconArrowDown } from '@element-plus/icons-vue';
 import EventBus from '../EventBus.js';
 import ConnectivityList from '../ConnectivityList/ConnectivityList.vue';
 import ExternalResourceCard from './ExternalResourceCard.vue';
