@@ -217,7 +217,21 @@ export default {
         }
       });
 
-      this.formatNonPubMedReferences(nonPubMedReferences).then((responses) => {
+      // Generic article pages (e.g. publisher sites like Frontiers)
+      // aren't on a known PubMed domain, but often embed a DOI in their URL path.
+      // Resolve those as DOI citations too instead of dropping them.
+      const remainingNonPubMedReferences = [];
+
+      nonPubMedReferences.forEach((reference) => {
+        const doi = this.extractDOIFromURL(reference);
+        if (doi) {
+          this.pubMedReferences.push({ id: doi, type: 'doi', citation: {}, resource: reference });
+        } else {
+          remainingNonPubMedReferences.push(reference);
+        }
+      });
+
+      this.formatNonPubMedReferences(remainingNonPubMedReferences).then((responses) => {
         this.openLibReferences = responses.filter((response) => response.type === 'openlib');
         this.isbnDBReferences = responses.filter((response) => response.type === 'isbndb');
 
@@ -346,6 +360,12 @@ export default {
       const names = ['doi.org/', 'nih.gov/pubmed/', 'pmc/articles/', 'pubmed.ncbi.nlm.nih.gov/'];
 
       return names;
+    },
+    extractDOIFromURL: function (urlStr) {
+      const str = decodeURIComponent(urlStr);
+      const doiMatch = str.match(/10\.\d{4,9}\/[^/\s]+/);
+
+      return doiMatch ? doiMatch[0] : null;
     },
     stripPMIDPrefix: function (pubmedId) {
       return pubmedId.split(':')[1];
