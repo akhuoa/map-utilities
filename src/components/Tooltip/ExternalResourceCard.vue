@@ -1,5 +1,5 @@
 <template>
-  <div class="resource-container">
+  <div class="resource-container" v-if="hasReferences">
     <div class="attribute-title-container">
       <div class="attribute-title">References</div>
       <div class="copy-button">
@@ -168,6 +168,13 @@ export default {
         (reference) => reference.type === 'doi' || reference.doi,
       );
       return withDOI.length;
+    },
+    hasReferences: function () {
+      return (
+        this.pubMedReferences.length > 0 ||
+        this.openLibReferences.length > 0 ||
+        this.isbnDBReferences.length > 0
+      );
     },
   },
   mounted: function () {
