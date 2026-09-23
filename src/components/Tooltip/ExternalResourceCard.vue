@@ -289,7 +289,7 @@ export default {
               bookId: bookId,
               resource: resource,
             });
-          } catch (error) {
+          } catch (_error) {
             // Data does not exist in OpenLibrary
             // Provide ISBNDB link for reference
             const url = `https://isbndb.com/book/${id}`;
