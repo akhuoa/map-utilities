@@ -1,5 +1,5 @@
 <template>
-  <div class="resource-container" v-if="hasReferences">
+  <div class="resource-container">
     <div class="attribute-title-container">
       <div class="attribute-title">References</div>
       <div class="copy-button">
@@ -169,13 +169,6 @@ export default {
       );
       return withDOI.length;
     },
-    hasReferences: function () {
-      return (
-        this.pubMedReferences.length > 0 ||
-        this.openLibReferences.length > 0 ||
-        this.isbnDBReferences.length > 0
-      );
-    },
   },
   mounted: function () {
     this.formatReferences([...this.resources]);
@@ -224,21 +217,7 @@ export default {
         }
       });
 
-      // Generic article pages (e.g. publisher sites like Frontiers)
-      // aren't on a known PubMed domain, but often embed a DOI in their URL path.
-      // Resolve those as DOI citations too instead of dropping them.
-      const remainingNonPubMedReferences = [];
-
-      nonPubMedReferences.forEach((reference) => {
-        const doi = this.extractDOIFromURL(reference);
-        if (doi) {
-          this.pubMedReferences.push({ id: doi, type: 'doi', citation: {}, resource: reference });
-        } else {
-          remainingNonPubMedReferences.push(reference);
-        }
-      });
-
-      this.formatNonPubMedReferences(remainingNonPubMedReferences).then((responses) => {
+      this.formatNonPubMedReferences(nonPubMedReferences).then((responses) => {
         this.openLibReferences = responses.filter((response) => response.type === 'openlib');
         this.isbnDBReferences = responses.filter((response) => response.type === 'isbndb');
 
@@ -367,12 +346,6 @@ export default {
       const names = ['doi.org/', 'nih.gov/pubmed/', 'pmc/articles/', 'pubmed.ncbi.nlm.nih.gov/'];
 
       return names;
-    },
-    extractDOIFromURL: function (urlStr) {
-      const str = decodeURIComponent(urlStr);
-      const doiMatch = str.match(/10\.\d{4,9}\/[^/\s]+/);
-
-      return doiMatch ? doiMatch[0] : null;
     },
     stripPMIDPrefix: function (pubmedId) {
       return pubmedId.split(':')[1];
