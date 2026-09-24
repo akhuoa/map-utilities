@@ -201,9 +201,7 @@ export default {
 
       // References not handled as pubmed/doi/pmc or isbn (openlib/isbndb)
       const unhandledReferences = [
-        ...nonPubMedReferences.filter(
-          (reference) => reference.indexOf('isbn') === -1,
-        ),
+        ...nonPubMedReferences.filter((reference) => reference.indexOf('isbn') === -1),
         ...this.pubMedReferences
           .filter((reference) => !reference || !reference.type)
           .map((reference) => reference?.resource ?? reference),
@@ -211,7 +209,7 @@ export default {
       if (unhandledReferences.length) {
         console.warn(
           `Unhandled references: references that could not be resolved to PubMed/DOI/ISBN`,
-          unhandledReferences
+          unhandledReferences,
         );
       }
 
