@@ -199,6 +199,20 @@ export default {
           : this.extractPublicationIdFromURLString(reference),
       );
 
+      // References not handled as pubmed/doi/pmc or isbn (openlib/isbndb)
+      const unhandledReferences = [
+        ...nonPubMedReferences.filter((reference) => reference.indexOf('isbn') === -1),
+        ...this.pubMedReferences
+          .filter((reference) => !reference || !reference.type)
+          .map((reference) => reference?.resource ?? reference),
+      ];
+      if (unhandledReferences.length) {
+        console.warn(
+          `Unhandled references: references that could not be resolved to PubMed/DOI/ISBN`,
+          unhandledReferences,
+        );
+      }
+
       // pmc to pmid
       this.pubMedReferences.forEach((reference) => {
         if (reference.type === 'pmc') {
@@ -208,6 +222,10 @@ export default {
               const idList = data.esearchresult.idlist || [];
               reference.id = idList[0];
               reference.type = 'pmid';
+              // generateCitationText already ran for this reference while it was
+              // still type 'pmc' (neither 'doi' nor 'pmid'), so it left the
+              // citation stuck in a loading state. Re-run it now that we have a pmid.
+              this.generateCitationText(reference, this.citationType);
             }
           });
         }
@@ -244,56 +262,59 @@ export default {
         (referenceURL) => referenceURL.indexOf('isbn') !== -1,
       );
 
-      const isbnIDs = filteredReferences.map((url) => {
-        const isbnId = url.split('/').pop();
-        return 'ISBN:' + isbnId;
-      });
-      const isbnIDsKey = isbnIDs.join(',');
-      const failedIDs = isbnIDs.slice();
+      const isbnIDs = filteredReferences.map((url) => url.split('/').pop());
 
       const getOriginalURL = (id) => {
         return filteredReferences.find((url) => url.includes(id));
       };
 
-      const openlibAPI = `https://openlibrary.org/api/books?bibkeys=${isbnIDsKey}&format=json`;
-      const data = await this.fetchData(openlibAPI);
+      await Promise.all(
+        isbnIDs.map(async (id) => {
+          const resource = getOriginalURL(id);
 
-      for (const key in data) {
-        const successKeyIndex = failedIDs.indexOf(key);
-        failedIDs.splice(successKeyIndex, 1);
+          try {
+            const { url, bookId } = await this.getBookInfoByISBN(id);
 
-        const url = data[key].info_url;
-        const urlSegments = url.split('/');
-        const endpointIndex = urlSegments.indexOf('books');
-        const bookId = urlSegments[endpointIndex + 1];
-        const id = key.split(':')[1]; // Key => "ISBN:1234"
-        const resource = getOriginalURL(id);
+            transformedReferences.push({
+              id: id,
+              type: 'openlib',
+              url: url,
+              bookId: bookId,
+              resource: resource,
+            });
+          } catch (_error) {
+            // Data does not exist in OpenLibrary
+            // Provide ISBNDB link for reference
+            const url = `https://isbndb.com/book/${id}`;
 
-        transformedReferences.push({
-          id: id,
-          type: 'openlib',
-          url: url,
-          bookId: bookId,
-          resource: resource,
-        });
-      }
-
-      failedIDs.forEach((failedID) => {
-        const id = failedID.split(':')[1];
-        // Data does not exist in OpenLibrary
-        // Provide ISBNDB link for reference
-        const url = `https://isbndb.com/book/${id}`;
-        const resource = getOriginalURL(id);
-
-        transformedReferences.push({
-          id: id,
-          url: url,
-          type: 'isbndb',
-          resource: resource,
-        });
-      });
+            transformedReferences.push({
+              id: id,
+              url: url,
+              type: 'isbndb',
+              resource: resource,
+            });
+          }
+        }),
+      );
 
       return transformedReferences;
+    },
+    getBookInfoByISBN: async function (isbn) {
+      const apiURL = `https://openlibrary.org/isbn/${isbn}.json`;
+      const response = await fetch(apiURL);
+
+      if (!response.ok) {
+        throw new Error(`Response status: ${response.status}`);
+      }
+
+      // The ISBN endpoint redirects to the edition's JSON endpoint,
+      // e.g. https://openlibrary.org/books/OL7353617M.json
+      const urlSegments = response.url.split('/');
+      const endpointIndex = urlSegments.indexOf('books');
+      const bookId = urlSegments[endpointIndex + 1].replace(/\.json$/, '');
+      const url = `https://openlibrary.org/books/${bookId}`;
+
+      return { url, bookId };
     },
     extractPublicationIdFromURLString: function (urlStr) {
       if (!urlStr) return;
