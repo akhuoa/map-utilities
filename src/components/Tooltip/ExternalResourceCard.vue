@@ -199,6 +199,22 @@ export default {
           : this.extractPublicationIdFromURLString(reference),
       );
 
+      // References not handled as pubmed/doi/pmc or isbn (openlib/isbndb)
+      const unhandledReferences = [
+        ...nonPubMedReferences.filter(
+          (reference) => reference.indexOf('isbn') === -1,
+        ),
+        ...this.pubMedReferences
+          .filter((reference) => !reference || !reference.type)
+          .map((reference) => reference?.resource ?? reference),
+      ];
+      if (unhandledReferences.length) {
+        console.warn(
+          `Unhandled references: references that could not be resolved to PubMed/DOI/ISBN`,
+          unhandledReferences
+        );
+      }
+
       // pmc to pmid
       this.pubMedReferences.forEach((reference) => {
         if (reference.type === 'pmc') {
