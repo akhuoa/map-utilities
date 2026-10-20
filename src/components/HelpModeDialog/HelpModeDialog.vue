@@ -23,6 +23,9 @@
 </template>
 
 <script>
+/**
+ * @deprecated Use HelpModeTour with the viewers' `getHelpModeSteps()` instead.
+ */
 export default {
   name: 'HelpModeDialog',
   props: {

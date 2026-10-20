@@ -17,6 +17,7 @@
           <map-svg-icon
             icon="comment"
             class="icon-button drawEdit"
+            data-help-id="draw-edit"
             @click="modeClickEvent('Edit')"
             @mouseover="showTooltip(hoverIndex('editPopover'))"
             @mouseout="hideTooltip(hoverIndex('editPopover'))"
@@ -38,6 +39,7 @@
           <map-svg-icon
             icon="drawTrash"
             class="icon-button drawDelete"
+            data-help-id="draw-delete"
             @click="modeClickEvent('Delete')"
             @mouseover="showTooltip(hoverIndex('deletePopover'))"
             @mouseout="hideTooltip(hoverIndex('deletePopover'))"
@@ -59,6 +61,7 @@
           <map-svg-icon
             icon="drawPoint"
             class="icon-button drawPoint"
+            data-help-id="draw-point"
             @click="toolClickEvent('Point')"
             @mouseover="showTooltip(hoverIndex('pointPopover'))"
             @mouseout="hideTooltip(hoverIndex('pointPopover'))"
@@ -80,6 +83,7 @@
           <map-svg-icon
             icon="drawLine"
             class="icon-button drawLineString"
+            data-help-id="draw-line-string"
             @click="toolClickEvent('LineString')"
             @mouseover="showTooltip(hoverIndex('lineStringPopover'))"
             @mouseout="hideTooltip(hoverIndex('lineStringPopover'))"
@@ -101,6 +105,7 @@
           <map-svg-icon
             icon="drawPolygon"
             class="icon-button drawPolygon"
+            data-help-id="draw-polygon"
             @click="toolClickEvent('Polygon')"
             @mouseover="showTooltip(hoverIndex('polygonPopover'))"
             @mouseout="hideTooltip(hoverIndex('polygonPopover'))"
@@ -122,6 +127,7 @@
           <map-svg-icon
             icon="connection"
             class="icon-button drawConnection"
+            data-help-id="draw-connection"
             @click="connectionClickEvent()"
             @mouseover="showTooltip(hoverIndex('connectionPopover'))"
             @mouseout="hideTooltip(hoverIndex('connectionPopover'))"
