@@ -41,7 +41,8 @@
  * the viewer is embedded in a longer page, can still be used and scrolled.
  *
  * It uses the same steps as `HelpModeTour`. Steps without a target or with
- * `hover: false` are ignored, `onEnter` and `onLeave` are not called.
+ * `hover: false` are ignored. `onEnter` of all the steps is called when the
+ * hover help starts, to show their targets, and `onLeave` when it stops.
  * Press Escape or click "Exit" to leave.
  */
 import { resolveTarget, isStepAvailable, getOverlayParent } from '../HelpModeTour/helpModeUtils.js';
@@ -181,6 +182,8 @@ export default {
     },
     start: function () {
       this.appendTo = getOverlayParent();
+      this.enteredSteps = this.hoverSteps();
+      this.enteredSteps.forEach((step) => step.onEnter?.());
       document.addEventListener('mouseover', this.onMouseOver, true);
       document.addEventListener('keydown', this.onKeyDown, true);
       document.addEventListener('scroll', this.requestRefresh, { capture: true, passive: true });
@@ -197,6 +200,8 @@ export default {
       window.removeEventListener('resize', this.requestRefresh);
       clearInterval(this.refreshTimer);
       cancelAnimationFrame(this.refreshRequest);
+      this.enteredSteps?.forEach((step) => step.onLeave?.());
+      this.enteredSteps = [];
       this.outlined?.forEach((el) => el.classList.remove(TARGET_CLASS));
       this.outlined?.clear();
       this.popoverVisible = false;
