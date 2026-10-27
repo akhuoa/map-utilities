@@ -4,7 +4,8 @@
     :model-value="modelValue"
     :current="displayIndex"
     :z-index="zIndex"
-    :scroll-into-view-options="false"
+    :append-to="appendTo"
+    :scroll-into-view-options="scrollIntoViewOptions"
     @update:current="onUpdateCurrent"
     @close="onClose"
     @finish="onFinish"
@@ -12,7 +13,7 @@
     <el-tour-step
       v-for="(step, index) in activeSteps"
       :key="step.id || index"
-      :target="index === displayIndex ? resolveTarget(step) : undefined"
+      :target="index === displayIndex ? targetGetter : undefined"
       :title="step.title"
       :description="step.description"
       :placement="step.placement || 'bottom'"
@@ -41,14 +42,24 @@
  *   description: String,
  *   placement: String,           // el-tour placement, defaults to 'bottom'
  *   group: String,               // optional label shown above the title, e.g. "Panel 2 · Flatmap"
+ *   area: String,                // optional, one of the `HELP_MODE_AREAS` keys, e.g. 'zoom'
+ *   hover: Boolean,              // optional, false to exclude the step from `HelpModeHover`
  *   target: () => HTMLElement,   // optional, a step without target is shown in the centre
  *   onEnter: async () => {},     // optional, prepare the UI (open a drawer, a popup, ...)
  *   onLeave: () => {},           // optional, revert what onEnter did
  * }
  *
  * Steps with a missing or hidden target are skipped in the direction of travel.
+ *
+ * The viewer can be embedded in a page which scrolls, the highlight follows the
+ * target when the page is scrolled.
  */
+import { resolveTarget, isStepAvailable, getOverlayParent } from './helpModeUtils.js';
+
 const ENTER_DELAY = 300;
+// Scroll the page as little as possible to show an off-screen target,
+// the containers inside the viewer are not scrolled if the target is visible in them.
+const SCROLL_INTO_VIEW_OPTIONS = { block: 'nearest', inline: 'nearest' };
 
 const wait = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 
@@ -84,6 +95,10 @@ export default {
       displayIndex: 0,
       // Increased on every navigation so stale async transitions are discarded.
       transitionId: 0,
+      // Target of the current step, replaced on scroll so el-tour updates the highlight.
+      targetGetter: undefined,
+      appendTo: 'body',
+      scrollIntoViewOptions: SCROLL_INTO_VIEW_OPTIONS,
     };
   },
   watch: {
@@ -98,30 +113,32 @@ export default {
       immediate: true,
     },
   },
+  created: function () {
+    this.scrollRequest = 0;
+  },
   beforeUnmount: function () {
     this.stop();
   },
   methods: {
-    resolveTarget: function (step) {
-      if (!step?.target) return undefined;
-      return typeof step.target === 'function' ? step.target() : step.target;
-    },
-    isStepAvailable: function (step) {
-      if (!step?.target) return true;
-      const el = this.resolveTarget(step);
-      return !!(el && el.isConnected && el.getClientRects().length > 0);
-    },
+    isStepAvailable,
     start: async function () {
+      this.appendTo = getOverlayParent();
+      document.addEventListener('scroll', this.onScroll, { capture: true, passive: true });
+      document.addEventListener('fullscreenchange', this.onFullscreenChange);
       this.activeSteps = this.steps.slice();
       this.displayIndex = 0;
       const found = await this.goTo(0, 1);
       if (!found) this.close();
     },
     stop: function () {
+      document.removeEventListener('scroll', this.onScroll, { capture: true });
+      document.removeEventListener('fullscreenchange', this.onFullscreenChange);
+      cancelAnimationFrame(this.scrollRequest);
       this.transitionId += 1;
       this.leaveStep(this.activeSteps[this.displayIndex]);
       this.activeSteps = [];
       this.displayIndex = 0;
+      this.targetGetter = undefined;
     },
     enterStep: async function (step) {
       if (step?.onEnter) {
@@ -145,12 +162,27 @@ export default {
         if (id !== this.transitionId) return false;
         if (this.isStepAvailable(step)) {
           this.displayIndex = i;
+          this.updateTarget();
           this.$emit('change', step, i, direction);
           return true;
         }
         this.leaveStep(step);
       }
       return false;
+    },
+    /**
+     * Give el-tour a new target getter, so it measures the target again.
+     */
+    updateTarget: function () {
+      const step = this.activeSteps[this.displayIndex];
+      this.targetGetter = step?.target ? () => resolveTarget(step) : undefined;
+    },
+    onScroll: function () {
+      cancelAnimationFrame(this.scrollRequest);
+      this.scrollRequest = requestAnimationFrame(() => this.updateTarget());
+    },
+    onFullscreenChange: function () {
+      this.appendTo = getOverlayParent();
     },
     onUpdateCurrent: async function (index) {
       // el-tour resets current to 0 when it is closed
