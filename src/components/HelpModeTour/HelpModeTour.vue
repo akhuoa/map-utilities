@@ -49,7 +49,8 @@
  *   onLeave: () => {},           // optional, revert what onEnter did
  * }
  *
- * Steps with a missing or hidden target are skipped in the direction of travel.
+ * Steps with a missing or hidden target are removed, so the step counter has no gaps.
+ * Steps with `onEnter` are only removed if their target is still unavailable after it.
  *
  * The viewer can be embedded in a page which scrolls, the highlight follows the
  * target when the page is scrolled.
@@ -125,7 +126,7 @@ export default {
       this.appendTo = getOverlayParent();
       document.addEventListener('scroll', this.onScroll, { capture: true, passive: true });
       document.addEventListener('fullscreenchange', this.onFullscreenChange);
-      this.activeSteps = this.steps.slice();
+      this.activeSteps = this.steps.filter((step) => step.onEnter || isStepAvailable(step));
       this.displayIndex = 0;
       const found = await this.goTo(0, 1);
       if (!found) this.close();
@@ -151,12 +152,13 @@ export default {
       if (step?.onLeave) step.onLeave();
     },
     /**
-     * Move to the first available step starting from `index` in `direction`.
-     * Returns true if a step was found.
+     * Move to the first available step starting from `index` in `direction`,
+     * unavailable steps on the way are removed. Returns true if a step was found.
      */
     goTo: async function (index, direction) {
       const id = ++this.transitionId;
-      for (let i = index; i >= 0 && i < this.activeSteps.length; i += direction) {
+      let i = index;
+      while (i >= 0 && i < this.activeSteps.length) {
         const step = this.activeSteps[i];
         await this.enterStep(step);
         if (id !== this.transitionId) return false;
@@ -167,6 +169,9 @@ export default {
           return true;
         }
         this.leaveStep(step);
+        this.activeSteps.splice(i, 1);
+        // Going forward, the next step is now at the same index
+        if (direction < 0) i -= 1;
       }
       return false;
     },
@@ -189,7 +194,6 @@ export default {
       if (!this.modelValue || index === this.displayIndex) return;
       const direction = index > this.displayIndex ? 1 : -1;
       const previous = this.activeSteps[this.displayIndex];
-      const previousIndex = this.displayIndex;
       this.leaveStep(previous);
       const found = await this.goTo(index, direction);
       if (found) return;
@@ -198,8 +202,9 @@ export default {
         this.onFinish();
         this.close();
       } else {
-        // Nothing to go back to, stay on the current step.
-        await this.goTo(previousIndex, 1);
+        // Nothing to go back to, stay on the current step,
+        // its index has changed if the steps before it were removed.
+        await this.goTo(this.activeSteps.indexOf(previous), 1);
       }
     },
     onClose: function () {
