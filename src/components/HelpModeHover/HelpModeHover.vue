@@ -48,6 +48,11 @@
 import { resolveTarget, isStepAvailable, getOverlayParent } from '../HelpModeTour/helpModeUtils.js';
 
 const TARGET_CLASS = 'help-mode-hover-target';
+// Set on the root element while the hover help is on
+const ACTIVE_CLASS = 'help-mode-hover-active';
+// Set on the root element while a target is under the mouse, for the targets which
+// do not receive the mouse, the element under them inherits the cursor
+const OVER_CLASS = 'help-mode-hover-over';
 // Space around a target, to show its outline
 const HOLE_PADDING = 6;
 const HOLE_RADIUS = 4;
@@ -171,6 +176,7 @@ export default {
   created: function () {
     this.outlined = new Set();
     this.refreshRequest = 0;
+    this.moveRequest = 0;
     this.refreshTimer = 0;
   },
   beforeUnmount: function () {
@@ -184,7 +190,8 @@ export default {
       this.appendTo = getOverlayParent();
       this.enteredSteps = this.hoverSteps();
       this.enteredSteps.forEach((step) => step.onEnter?.());
-      document.addEventListener('mouseover', this.onMouseOver, true);
+      document.documentElement.classList.add(ACTIVE_CLASS);
+      document.addEventListener('mousemove', this.onMouseMove, { capture: true, passive: true });
       document.addEventListener('keydown', this.onKeyDown, true);
       document.addEventListener('scroll', this.requestRefresh, { capture: true, passive: true });
       document.addEventListener('fullscreenchange', this.onFullscreenChange);
@@ -193,7 +200,9 @@ export default {
       this.$nextTick(() => this.refreshTargets());
     },
     stop: function () {
-      document.removeEventListener('mouseover', this.onMouseOver, true);
+      document.documentElement.classList.remove(ACTIVE_CLASS, OVER_CLASS);
+      document.removeEventListener('mousemove', this.onMouseMove, { capture: true });
+      cancelAnimationFrame(this.moveRequest);
       document.removeEventListener('keydown', this.onKeyDown, true);
       document.removeEventListener('scroll', this.requestRefresh, { capture: true });
       document.removeEventListener('fullscreenchange', this.onFullscreenChange);
@@ -265,21 +274,39 @@ export default {
     /**
      * Find the step of the innermost target containing the element.
      */
-    findStep: function (element) {
+    /**
+     * Find the step of the innermost target at the position. The position is used
+     * rather than the element under the mouse, as disabled controls often have
+     * `pointer-events: none` and never receive the mouse, but their help is still shown.
+     */
+    findStepAt: function (x, y) {
       const matches = this.hoverSteps()
-        .map((step) => ({ step, el: resolveTarget(step) }))
-        .filter(({ el }) => el && el.contains(element));
-      const innermost = matches.find(
-        (match) => !matches.some((other) => other !== match && match.el.contains(other.el)),
+        .filter((step) => isStepAvailable(step))
+        .map((step) => {
+          const el = resolveTarget(step);
+          const { left, top, right, bottom } = el.getBoundingClientRect();
+          return { step, el, left, top, right, bottom, size: (right - left) * (bottom - top) };
+        })
+        .filter(
+          ({ left, top, right, bottom }) => x >= left && x <= right && y >= top && y <= bottom,
+        );
+      return matches.reduce(
+        (smallest, match) => (!smallest || match.size < smallest.size ? match : smallest),
+        null,
       );
-      return innermost;
     },
-    onMouseOver: function (event) {
+    onMouseMove: function (event) {
       if (!this.modelValue) return;
-      this.requestRefresh();
-      const element = event.target;
+      const { clientX, clientY, target } = event;
+      cancelAnimationFrame(this.moveRequest);
+      this.moveRequest = requestAnimationFrame(() => this.updateHover(clientX, clientY, target));
+    },
+    updateHover: function (x, y, element) {
+      this.refreshTargets();
       if (element?.closest?.('.help-mode-hover__popper, .help-mode-hover__banner')) return;
-      const match = this.findStep(element);
+      // The mask covers the parts of the targets outside of the greyed out area
+      const match = element?.closest?.('.help-mode-hover__mask') ? null : this.findStepAt(x, y);
+      document.documentElement.classList.toggle(OVER_CLASS, !!match);
       if (!match) {
         this.popoverVisible = false;
         return;
@@ -309,7 +336,14 @@ export default {
 .help-mode-hover-target {
   outline: 2px dashed $app-primary-color !important;
   outline-offset: 2px;
+}
 
+html.help-mode-hover-over {
+  cursor: help;
+}
+
+// More specific than the components' own cursors, e.g. `not-allowed` on disabled controls
+html.help-mode-hover-active .help-mode-hover-target {
   &,
   * {
     cursor: help !important;
