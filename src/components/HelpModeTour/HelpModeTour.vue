@@ -20,7 +20,9 @@
     >
       <template #header>
         <div class="help-mode-tour__header">
-          <span v-if="step.group" class="help-mode-tour__group">{{ step.group }}</span>
+          <span v-if="step.group" class="help-mode-tour__group" :title="step.group">
+            {{ step.group }}
+          </span>
           <span class="help-mode-tour__title">{{ step.title }}</span>
         </div>
       </template>
@@ -300,14 +302,21 @@ export default {
 .help-mode-tour__header {
   display: flex;
   flex-direction: column;
-  gap: 2px;
   padding-right: 24px;
 }
 
+// A long label, e.g. a panel with a long map name, wraps to two lines at most,
+// the full label is in its tooltip
 .help-mode-tour__group {
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  line-clamp: 2;
+  overflow: hidden;
+  overflow-wrap: anywhere;
   font-size: 12px;
   font-weight: 500;
-  text-transform: uppercase;
+  line-height: 1.35;
   letter-spacing: 0.04em;
   color: $lightGrey;
 }
@@ -316,6 +325,13 @@ export default {
   font-size: 16px;
   font-weight: 500;
   color: $app-primary-color;
+}
+
+// The divider is on the title, padding under the clamped label would show part of a third line
+.help-mode-tour__group + .help-mode-tour__title {
+  margin-top: 8px;
+  padding-top: 8px;
+  border-top: 1px solid $lineColor2;
 }
 
 .help-mode-tour__counter {

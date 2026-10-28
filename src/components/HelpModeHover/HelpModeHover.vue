@@ -23,7 +23,7 @@
       >
         <div v-if="currentStep">
           <div class="help-mode-tour__header">
-            <span v-if="currentStep.group" class="help-mode-tour__group">
+            <span v-if="currentStep.group" class="help-mode-tour__group" :title="currentStep.group">
               {{ currentStep.group }}
             </span>
             <span class="help-mode-tour__title">{{ currentStep.title }}</span>
