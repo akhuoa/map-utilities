@@ -6,7 +6,9 @@
         <path class="help-mode-hover__outline" :d="outlinePath" />
       </svg>
       <div class="help-mode-hover__banner" :style="bannerStyle">
-        <span>Hover over a highlighted control to see what it does.</span>
+        <el-icon class="help-mode-hover__icon"><el-icon-pointer /></el-icon>
+        <strong>Hover help</strong>
+        <span>Point at a highlighted control to see what it does.</span>
         <el-button size="small" class="help-mode-hover__exit" @click="close">Exit</el-button>
       </div>
       <el-popover
@@ -46,6 +48,7 @@
  * hover help starts, to show their targets, and `onLeave` when it stops.
  * Press Escape or click "Exit" to leave.
  */
+import { Pointer as ElIconPointer } from '@element-plus/icons-vue';
 import { resolveTarget, isStepAvailable, getOverlayParent } from '../HelpModeTour/helpModeUtils.js';
 
 const TARGET_CLASS = 'help-mode-hover-target';
@@ -159,6 +162,9 @@ const edgesPath = (boxes) => {
 
 export default {
   name: 'HelpModeHover',
+  components: {
+    ElIconPointer,
+  },
   props: {
     /**
      * Show or hide the hover help (v-model).
@@ -456,11 +462,20 @@ html.help-mode-hover-active .help-mode-hover-target {
   font-family: $font-family;
   font-size: 12px;
   white-space: nowrap;
-  color: $grey;
-  background-color: white;
+  // Solid, the opposite of the help items which are outlined holes in the mask
+  color: white;
+  background-color: $app-primary-color;
   border: 1px solid $app-primary-color;
   border-radius: 4px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.35);
+
+  .help-mode-hover__icon {
+    font-size: 14px;
+  }
+
+  strong {
+    font-weight: 500;
+  }
 
   .help-mode-hover__exit.el-button {
     height: 22px;
@@ -468,13 +483,13 @@ html.help-mode-hover-active .help-mode-hover-target {
     font-family: inherit;
     font-size: 12px;
     color: $app-primary-color;
-    background-color: #f3e6f9;
-    border-color: $app-primary-color;
+    background-color: white;
+    border-color: white;
 
     &:hover {
-      color: white;
-      background-color: #ac76c5;
-      border-color: #ac76c5;
+      color: $app-primary-color;
+      background-color: #f3e6f9;
+      border-color: #f3e6f9;
     }
   }
 }
