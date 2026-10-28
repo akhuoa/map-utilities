@@ -328,15 +328,14 @@ export default {
         }
       }
 
-      &.el-button--default {
-        color: $app-primary-color;
-        background-color: #f3e6f9;
-        border-color: $app-primary-color;
-
-        &:hover {
-          color: white;
-          background-color: #ac76c5;
-          border-color: #ac76c5;
+      // "Previous", el-tour gives it no type, it follows the plain buttons of the maps viewer
+      &:not(.el-button--primary) {
+        &:hover,
+        &:focus,
+        &:active {
+          color: $app-primary-color;
+          background-color: #f3e6f9;
+          border-color: #cd99e5;
         }
       }
     }
