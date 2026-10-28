@@ -3,6 +3,7 @@
     <div v-if="modelValue" class="help-mode-hover" :style="{ zIndex }">
       <svg class="help-mode-hover__mask" :viewBox="`0 0 ${viewport.width} ${viewport.height}`">
         <path :d="maskPath" fill-rule="evenodd" />
+        <path class="help-mode-hover__outline" :d="outlinePath" />
       </svg>
       <div class="help-mode-hover__banner" :style="bannerStyle">
         <span>Hover over a highlighted control to see what it does.</span>
@@ -53,9 +54,10 @@ const ACTIVE_CLASS = 'help-mode-hover-active';
 // Set on the root element while a target is under the mouse, for the targets which
 // do not receive the mouse, the element under them inherits the cursor
 const OVER_CLASS = 'help-mode-hover-over';
-// Space around a target, to show its outline
-const HOLE_PADDING = 6;
-const HOLE_RADIUS = 4;
+// Space around a target, its outline is drawn on the edge of its hole
+const HOLE_PADDING = 4;
+// Edges closer than this are drawn as one line
+const EDGE_TOLERANCE = 0.5;
 // Targets can move without a mouse event, e.g. an opening drawer
 const REFRESH_INTERVAL = 250;
 // Distance of the banner from the top of the visible part of the container, the banner
@@ -85,17 +87,74 @@ const intersect = (a, b) => ({
 
 const isEmpty = ({ left, top, right, bottom }) => right <= left || bottom <= top;
 
-const roundedRectPath = ({ left, top, right, bottom }) => {
-  const x = left;
-  const y = top;
-  const w = right - left;
-  const h = bottom - top;
-  const r = Math.min(HOLE_RADIUS, w / 2, h / 2);
-  return (
-    `M${x + r},${y}h${w - 2 * r}a${r},${r} 0 0 1 ${r},${r}v${h - 2 * r}` +
-    `a${r},${r} 0 0 1 -${r},${r}h-${w - 2 * r}a${r},${r} 0 0 1 -${r},-${r}` +
-    `v-${h - 2 * r}a${r},${r} 0 0 1 ${r},-${r}z`
-  );
+const rectPath = ({ left, top, right, bottom }) => `M${left},${top}H${right}V${bottom}H${left}z`;
+
+const boxesOverlap = (a, b) =>
+  a.left < b.right && b.left < a.right && a.top < b.bottom && b.top < a.bottom;
+
+/**
+ * When the padded boxes of two targets next to each other overlap, move their facing
+ * edges to the middle of the gap between the targets, so the boxes share an edge.
+ * Overlapping holes would cancel out with the even-odd rule and show the mask between them.
+ */
+const separate = (a, b) => {
+  if (!boxesOverlap(a.box, b.box)) return;
+  const gapX = Math.max(b.rect.left - a.rect.right, a.rect.left - b.rect.right);
+  const gapY = Math.max(b.rect.top - a.rect.bottom, a.rect.top - b.rect.bottom);
+  // The targets themselves overlap
+  if (gapX < 0 && gapY < 0) return;
+  if (gapX >= gapY) {
+    const [left, right] = a.rect.right <= b.rect.left ? [a, b] : [b, a];
+    const middle = (left.rect.right + right.rect.left) / 2;
+    left.box.right = Math.min(left.box.right, middle);
+    right.box.left = Math.max(right.box.left, middle);
+  } else {
+    const [top, bottom] = a.rect.bottom <= b.rect.top ? [a, b] : [b, a];
+    const middle = (top.rect.bottom + bottom.rect.top) / 2;
+    top.box.bottom = Math.min(top.box.bottom, middle);
+    bottom.box.top = Math.max(bottom.box.top, middle);
+  }
+};
+
+/**
+ * Returns the path of the edges of the boxes, the edges on the same line are joined,
+ * so a shared edge between two boxes is drawn once. Each joined edge is its own subpath,
+ * the dashes restart on each of them and line up.
+ */
+const edgesPath = (boxes) => {
+  const lines = { V: new Map(), H: new Map() };
+  const add = (direction, position, start, end) => {
+    const key = Math.round(position / EDGE_TOLERANCE) * EDGE_TOLERANCE;
+    if (!lines[direction].has(key)) lines[direction].set(key, []);
+    lines[direction].get(key).push([start, end]);
+  };
+  boxes.forEach(({ left, top, right, bottom }) => {
+    add('V', left, top, bottom);
+    add('V', right, top, bottom);
+    add('H', top, left, right);
+    add('H', bottom, left, right);
+  });
+  const path = [];
+  Object.entries(lines).forEach(([direction, positions]) => {
+    positions.forEach((segments, position) => {
+      segments.sort((a, b) => a[0] - b[0]);
+      const joined = [];
+      segments.forEach(([start, end]) => {
+        const last = joined[joined.length - 1];
+        if (last && start <= last[1] + EDGE_TOLERANCE) {
+          last[1] = Math.max(last[1], end);
+        } else {
+          joined.push([start, end]);
+        }
+      });
+      joined.forEach(([start, end]) => {
+        path.push(
+          direction === 'V' ? `M${position},${start}V${end}` : `M${start},${position}H${end}`,
+        );
+      });
+    });
+  });
+  return path.join('');
 };
 
 export default {
@@ -138,6 +197,7 @@ export default {
       currentElement: null,
       popoverVisible: false,
       holes: [],
+      outlinePath: '',
       // The greyed out area, in viewport coordinates
       area: { left: 0, top: 0, right: 0, bottom: 0 },
       viewport: { width: 0, height: 0 },
@@ -148,7 +208,7 @@ export default {
     maskPath: function () {
       const { left, top, right, bottom } = this.area;
       const outer = `M${left},${top}H${right}V${bottom}H${left}z`;
-      return [outer, ...this.holes.map(roundedRectPath)].join('');
+      return [outer, ...this.holes.map(rectPath)].join('');
     },
     bannerStyle: function () {
       const visible = intersect(this.area, {
@@ -219,6 +279,7 @@ export default {
       this.currentStep = null;
       this.currentElement = null;
       this.holes = [];
+      this.outlinePath = '';
     },
     /**
      * Outline the available targets and cut a hole in the mask for each of them,
@@ -247,25 +308,37 @@ export default {
       return { left: 0, top: 0, right: window.innerWidth, bottom: window.innerHeight };
     },
     /**
-     * Only the outermost targets get a hole, the nested ones are already
-     * uncovered and overlapping holes would cancel out with the even-odd rule.
+     * Cut a hole in the mask for each target and outline it, the boxes of targets next to
+     * each other share an edge. Only the outermost boxes get a hole, the nested ones are
+     * already uncovered and overlapping holes would cancel out with the even-odd rule.
      * Holes are kept inside the greyed out area for the same reason.
      */
     updateHoles: function (elements) {
       const area = this.getArea();
-      const rects = [...elements]
-        .map((el) => intersect(pad(el.getBoundingClientRect(), HOLE_PADDING), area))
-        .filter((rect) => !isEmpty(rect));
-      this.holes = rects.filter(
-        (rect, index) =>
-          !rects.some(
+      const items = [...elements].map((el) => {
+        const { left, top, right, bottom } = el.getBoundingClientRect();
+        const rect = { left, top, right, bottom };
+        return { rect, box: pad(rect, HOLE_PADDING) };
+      });
+      items.forEach((item, index) => {
+        items.slice(index + 1).forEach((other) => {
+          // A nested target is inside the hole of its container
+          if (isInside(item.rect, other.rect) || isInside(other.rect, item.rect)) return;
+          separate(item, other);
+        });
+      });
+      const boxes = items.map(({ box }) => intersect(box, area)).filter((box) => !isEmpty(box));
+      this.holes = boxes.filter(
+        (box, index) =>
+          !boxes.some(
             (other, otherIndex) =>
               otherIndex !== index &&
-              isInside(rect, other) &&
-              // keep one of identical rects
-              !(isInside(other, rect) && otherIndex > index),
+              isInside(box, other) &&
+              // keep one of identical boxes
+              !(isInside(other, box) && otherIndex > index),
           ),
       );
+      this.outlinePath = edgesPath(boxes);
       this.area = area;
       this.viewport = { width: window.innerWidth, height: window.innerHeight };
     },
@@ -335,11 +408,6 @@ export default {
 </script>
 
 <style lang="scss">
-.help-mode-hover-target {
-  outline: 2px dashed $app-primary-color !important;
-  outline-offset: 2px;
-}
-
 html.help-mode-hover-over {
   cursor: help;
 }
@@ -364,6 +432,14 @@ html.help-mode-hover-active .help-mode-hover-target {
   path {
     fill: rgba(0, 0, 0, 0.5);
     pointer-events: auto;
+  }
+
+  .help-mode-hover__outline {
+    fill: none;
+    stroke: $app-primary-color;
+    stroke-width: 2;
+    stroke-dasharray: 6 4;
+    pointer-events: none;
   }
 }
 
