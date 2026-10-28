@@ -60,10 +60,20 @@
  *
  * The viewer can be embedded in a page which scrolls, the highlight follows the
  * target when the page is scrolled.
+ *
+ * A target behind other elements, e.g. a map feature behind a drawer, is still shown:
+ * what covers it is made transparent while the step is shown, nothing else is changed.
  */
-import { resolveTarget, isStepAvailable, getOverlayParent } from './helpModeUtils.js';
+import {
+  resolveTarget,
+  isStepAvailable,
+  getCoveringElements,
+  getOverlayParent,
+} from './helpModeUtils.js';
 
 const ENTER_DELAY = 300;
+// Set on the elements in front of the target of the current step
+const UNCOVERED_CLASS = 'help-mode-tour-uncovered';
 // Scroll the page as little as possible to show an off-screen target,
 // the containers inside the viewer are not scrolled if the target is visible in them.
 const SCROLL_INTO_VIEW_OPTIONS = { block: 'nearest', inline: 'nearest' };
@@ -122,6 +132,7 @@ export default {
   },
   created: function () {
     this.scrollRequest = 0;
+    this.uncovered = [];
   },
   beforeUnmount: function () {
     this.stop();
@@ -141,6 +152,7 @@ export default {
       document.removeEventListener('scroll', this.onScroll, { capture: true });
       document.removeEventListener('fullscreenchange', this.onFullscreenChange);
       cancelAnimationFrame(this.scrollRequest);
+      this.restoreCovered();
       this.transitionId += 1;
       this.leaveStep(this.activeSteps[this.displayIndex]);
       this.activeSteps = [];
@@ -155,7 +167,22 @@ export default {
       }
     },
     leaveStep: function (step) {
+      this.restoreCovered();
       if (step?.onLeave) step.onLeave();
+    },
+    /**
+     * Make the elements in front of the target of the current step transparent.
+     */
+    uncoverTarget: function () {
+      this.restoreCovered();
+      const el = resolveTarget(this.activeSteps[this.displayIndex]);
+      if (!el?.isConnected) return;
+      this.uncovered = getCoveringElements(el);
+      this.uncovered.forEach((element) => element.classList.add(UNCOVERED_CLASS));
+    },
+    restoreCovered: function () {
+      this.uncovered?.forEach((element) => element.classList.remove(UNCOVERED_CLASS));
+      this.uncovered = [];
     },
     /**
      * Move to the first available step starting from `index` in `direction`,
@@ -171,6 +198,7 @@ export default {
         if (this.isStepAvailable(step)) {
           this.displayIndex = i;
           this.updateTarget();
+          this.uncoverTarget();
           this.$emit('change', step, i, direction);
           return true;
         }
@@ -190,7 +218,11 @@ export default {
     },
     onScroll: function () {
       cancelAnimationFrame(this.scrollRequest);
-      this.scrollRequest = requestAnimationFrame(() => this.updateTarget());
+      this.scrollRequest = requestAnimationFrame(() => {
+        this.updateTarget();
+        // A target scrolled into view can be behind other elements
+        this.uncoverTarget();
+      });
     },
     onFullscreenChange: function () {
       this.appendTo = getOverlayParent();
@@ -236,6 +268,18 @@ export default {
 </script>
 
 <style lang="scss">
+// A target while looking for what covers it, see `getCoveringElementAt` in `helpModeUtils.js`
+.help-mode-hit-test,
+.help-mode-hit-test * {
+  pointer-events: auto !important;
+}
+
+// Elements in front of the target of the current step, e.g. a drawer in front of the map
+.help-mode-tour-uncovered {
+  opacity: 0 !important;
+  transition: opacity 0.2s;
+}
+
 .help-mode-tour.el-tour {
   --el-tour-width: 320px;
   --el-tour-padding-primary: 16px;

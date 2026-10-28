@@ -295,7 +295,7 @@ export default {
     refreshTargets: function () {
       const elements = new Set(
         this.hoverSteps()
-          .filter((step) => isStepAvailable(step))
+          .filter((step) => isStepAvailable(step, { checkCovered: true }))
           .map((step) => resolveTarget(step)),
       );
       this.outlined.forEach((el) => {
@@ -362,9 +362,10 @@ export default {
      */
     findStepAt: function (x, y) {
       const matches = this.hoverSteps()
-        .filter((step) => isStepAvailable(step))
-        .map((step) => {
-          const el = resolveTarget(step);
+        .map((step) => ({ step, el: resolveTarget(step) }))
+        // Only the highlighted targets, they are checked in `refreshTargets`
+        .filter(({ el }) => this.outlined.has(el))
+        .map(({ step, el }) => {
           const { left, top, right, bottom } = el.getBoundingClientRect();
           return { step, el, left, top, right, bottom, size: (right - left) * (bottom - top) };
         })
@@ -383,7 +384,6 @@ export default {
       this.moveRequest = requestAnimationFrame(() => this.updateHover(clientX, clientY, target));
     },
     updateHover: function (x, y, element) {
-      this.refreshTargets();
       if (element?.closest?.('.help-mode-hover__popper, .help-mode-hover__banner')) return;
       // The mask covers the parts of the targets outside of the greyed out area
       const match = element?.closest?.('.help-mode-hover__mask') ? null : this.findStepAt(x, y);
