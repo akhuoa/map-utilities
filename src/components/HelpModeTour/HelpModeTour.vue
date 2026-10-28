@@ -35,6 +35,9 @@
 /**
  * A single guided tour built on Element Plus `el-tour`.
  *
+ * The steps usually come from the `v-help-mode` directive on the controls,
+ * see `collectHelpModeSteps` in `helpModeDirective.js`.
+ *
  * Each step is a plain object:
  * {
  *   id: String,
@@ -43,6 +46,7 @@
  *   placement: String,           // el-tour placement, defaults to 'bottom'
  *   group: String,               // optional label shown above the title, e.g. "Panel 2 · Flatmap"
  *   area: String,                // optional, one of the `HELP_MODE_AREAS` keys, e.g. 'zoom'
+ *   order: Number,               // optional, the order within the area, defaults to the page order
  *   hover: Boolean,              // optional, false to exclude the step from `HelpModeHover`
  *   target: () => HTMLElement,   // optional, a step without target is shown in the centre
  *   onEnter: async () => {},     // optional, prepare the UI (open a drawer, a popup, ...)

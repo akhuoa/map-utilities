@@ -58,8 +58,10 @@ const HOLE_PADDING = 6;
 const HOLE_RADIUS = 4;
 // Targets can move without a mouse event, e.g. an opening drawer
 const REFRESH_INTERVAL = 250;
-// Distance of the banner from the top of the visible part of the container
-const BANNER_OFFSET = 12;
+// Distance of the banner from the top of the visible part of the container, the banner
+// is small enough to stay within a toolbar at the top, e.g. the 32px toolbar of the maps viewer,
+// so it does not cover the controls below it such as the panel headers
+const BANNER_OFFSET = 2;
 
 const isInside = (inner, outer) =>
   inner.left >= outer.left &&
@@ -371,10 +373,13 @@ html.help-mode-hover-active .help-mode-hover-target {
   z-index: inherit;
   display: flex;
   align-items: center;
-  gap: 12px;
-  padding: 8px 12px 8px 16px;
+  gap: 8px;
+  box-sizing: border-box;
+  height: 28px;
+  padding: 0 3px 0 12px;
   font-family: $font-family;
-  font-size: 14px;
+  font-size: 12px;
+  white-space: nowrap;
   color: $grey;
   background-color: white;
   border: 1px solid $app-primary-color;
@@ -382,7 +387,10 @@ html.help-mode-hover-active .help-mode-hover-target {
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
 
   .help-mode-hover__exit.el-button {
+    height: 22px;
+    padding: 0 10px;
     font-family: inherit;
+    font-size: 12px;
     color: $app-primary-color;
     background-color: #f3e6f9;
     border-color: $app-primary-color;
