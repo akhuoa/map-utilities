@@ -133,6 +133,7 @@ export default {
   created: function () {
     this.scrollRequest = 0;
     this.uncovered = [];
+    this.navigating = false;
   },
   beforeUnmount: function () {
     this.stop();
@@ -145,8 +146,14 @@ export default {
       document.addEventListener('fullscreenchange', this.onFullscreenChange);
       this.activeSteps = this.steps.filter((step) => step.onEnter || isStepAvailable(step));
       this.displayIndex = 0;
-      const found = await this.goTo(0, 1);
-      if (!found) this.close();
+      this.navigating = true;
+      try {
+        const found = await this.goTo(0, 1);
+        // Not when the tour was stopped meanwhile, it may have been started again
+        if (found === false) this.close();
+      } finally {
+        this.navigating = false;
+      }
     },
     stop: function () {
       document.removeEventListener('scroll', this.onScroll, { capture: true });
@@ -186,7 +193,8 @@ export default {
     },
     /**
      * Move to the first available step starting from `index` in `direction`,
-     * unavailable steps on the way are removed. Returns true if a step was found.
+     * unavailable steps on the way are removed. Returns true if a step was found,
+     * false if there is none, null if the tour was stopped meanwhile.
      */
     goTo: async function (index, direction) {
       const id = ++this.transitionId;
@@ -194,7 +202,7 @@ export default {
       while (i >= 0 && i < this.activeSteps.length) {
         const step = this.activeSteps[i];
         await this.enterStep(step);
-        if (id !== this.transitionId) return false;
+        if (id !== this.transitionId) return null;
         if (this.isStepAvailable(step)) {
           this.displayIndex = i;
           this.updateTarget();
@@ -230,19 +238,27 @@ export default {
     onUpdateCurrent: async function (index) {
       // el-tour resets current to 0 when it is closed
       if (!this.modelValue || index === this.displayIndex) return;
-      const direction = index > this.displayIndex ? 1 : -1;
-      const previous = this.activeSteps[this.displayIndex];
-      this.leaveStep(previous);
-      const found = await this.goTo(index, direction);
-      if (found) return;
-      if (direction > 0) {
-        // Nothing left to show, the tour is finished.
-        this.onFinish();
-        this.close();
-      } else {
-        // Nothing to go back to, stay on the current step,
-        // its index has changed if the steps before it were removed.
-        await this.goTo(this.activeSteps.indexOf(previous), 1);
+      // Moving to a step can take a while, e.g. to open a drawer, the requests meanwhile
+      // are ignored, e.g. the arrow keys pressed quickly
+      if (this.navigating) return;
+      this.navigating = true;
+      try {
+        const direction = index > this.displayIndex ? 1 : -1;
+        const previous = this.activeSteps[this.displayIndex];
+        this.leaveStep(previous);
+        const found = await this.goTo(index, direction);
+        if (found || found === null) return;
+        if (direction > 0) {
+          // Nothing left to show, the tour is finished.
+          this.onFinish();
+          this.close();
+        } else {
+          // Nothing to go back to, stay on the current step,
+          // its index has changed if the steps before it were removed.
+          await this.goTo(this.activeSteps.indexOf(previous), 1);
+        }
+      } finally {
+        this.navigating = false;
       }
     },
     onClose: function () {
