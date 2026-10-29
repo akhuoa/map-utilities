@@ -4,6 +4,14 @@
       <svg class="help-mode-hover__mask" :viewBox="`0 0 ${viewport.width} ${viewport.height}`">
         <path :d="maskPath" fill-rule="evenodd" />
         <path class="help-mode-hover__outline" :d="outlinePath" />
+        <!-- Catches the mouse over the whole area, including the highlighted controls -->
+        <rect
+          class="help-mode-hover__shield"
+          :x="area.left"
+          :y="area.top"
+          :width="Math.max(area.right - area.left, 0)"
+          :height="Math.max(area.bottom - area.top, 0)"
+        />
       </svg>
       <div class="help-mode-hover__banner" :style="bannerStyle">
         <el-icon class="help-mode-hover__icon"><el-icon-pointer /></el-icon>
@@ -39,9 +47,9 @@
 /**
  * The reverse of `HelpModeTour`: the container is greyed out except the controls
  * with help, which are outlined. Hovering over one of them shows its help.
- * The mask blocks the mouse everywhere else in the container, so only the controls
- * with help can be hovered or clicked. The page outside the container, e.g. when
- * the viewer is embedded in a longer page, can still be used and scrolled.
+ * Nothing in the container can be used while it is on, including the highlighted controls,
+ * so the focus is on their help; "Exit" or Escape leaves it. The page outside the container,
+ * e.g. when the viewer is embedded in a longer page, can still be used and scrolled.
  *
  * It uses the same steps as `HelpModeTour`. Steps without a target or with
  * `hover: false` are ignored. `onEnter` of all the steps is called when the
@@ -52,10 +60,8 @@ import { Pointer as ElIconPointer } from '@element-plus/icons-vue';
 import { resolveTarget, isStepAvailable, getOverlayParent } from '../HelpModeTour/helpModeUtils.js';
 
 const TARGET_CLASS = 'help-mode-hover-target';
-// Set on the root element while the hover help is on
-const ACTIVE_CLASS = 'help-mode-hover-active';
-// Set on the root element while a target is under the mouse, for the targets which
-// do not receive the mouse, the element under them inherits the cursor
+// Set on the root element while a target is under the mouse, the shield in front of
+// the targets inherits the cursor
 const OVER_CLASS = 'help-mode-hover-over';
 // Space around a target, its outline is drawn on the edge of its hole
 const HOLE_PADDING = 4;
@@ -258,7 +264,6 @@ export default {
       this.appendTo = getOverlayParent();
       this.enteredSteps = this.hoverSteps();
       this.enteredSteps.forEach((step) => step.onEnter?.());
-      document.documentElement.classList.add(ACTIVE_CLASS);
       document.addEventListener('mousemove', this.onMouseMove, { capture: true, passive: true });
       document.addEventListener('keydown', this.onKeyDown, true);
       document.addEventListener('scroll', this.requestRefresh, { capture: true, passive: true });
@@ -268,7 +273,7 @@ export default {
       this.$nextTick(() => this.refreshTargets());
     },
     stop: function () {
-      document.documentElement.classList.remove(ACTIVE_CLASS, OVER_CLASS);
+      document.documentElement.classList.remove(OVER_CLASS);
       document.removeEventListener('mousemove', this.onMouseMove, { capture: true });
       cancelAnimationFrame(this.moveRequest);
       document.removeEventListener('keydown', this.onKeyDown, true);
@@ -385,8 +390,10 @@ export default {
     },
     updateHover: function (x, y, element) {
       if (element?.closest?.('.help-mode-hover__popper, .help-mode-hover__banner')) return;
-      // The mask covers the parts of the targets outside of the greyed out area
-      const match = element?.closest?.('.help-mode-hover__mask') ? null : this.findStepAt(x, y);
+      // Only in the greyed out area, the targets can be partly outside of it
+      const { left, top, right, bottom } = this.area;
+      const inArea = x >= left && x <= right && y >= top && y <= bottom;
+      const match = inArea ? this.findStepAt(x, y) : null;
       document.documentElement.classList.toggle(OVER_CLASS, !!match);
       if (!match) {
         this.popoverVisible = false;
@@ -418,26 +425,26 @@ html.help-mode-hover-over {
   cursor: help;
 }
 
-// More specific than the components' own cursors, e.g. `not-allowed` on disabled controls
-html.help-mode-hover-active .help-mode-hover-target {
-  &,
-  * {
-    cursor: help !important;
-  }
-}
-
 .help-mode-hover__mask {
   position: fixed;
   inset: 0;
   width: 100vw;
   height: 100vh;
   z-index: inherit;
-  // Only the masked area catches the mouse, the holes let it through to the targets
+  // Only the shield catches the mouse, the page outside of the greyed out area can be used
   pointer-events: none;
 
   path {
     fill: rgba(0, 0, 0, 0.5);
     pointer-events: auto;
+  }
+
+  // Transparent, so the controls cannot be used while the hover help is on,
+  // the cursor follows the root element, e.g. the help cursor over a highlighted control
+  .help-mode-hover__shield {
+    fill: transparent;
+    pointer-events: all;
+    cursor: inherit;
   }
 
   .help-mode-hover__outline {
